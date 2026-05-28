@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -8,7 +9,13 @@ import { MessagesModule } from './messages/messages.module';
 import { SupabaseService } from './supabase/supabase.service';
 
 @Module({
-  imports: [AuthModule, UsersModule, JobsModule, MessagesModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule,
+    UsersModule,
+    JobsModule,
+    MessagesModule,
+  ],
   controllers: [AppController],
   providers: [AppService, SupabaseService],
 })
