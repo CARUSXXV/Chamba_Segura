@@ -1,1 +1,20 @@
+# Node / Dependencias (ignora en raíz y en subcarpetas)
+node_modules/
+**/node_modules/
+
+# Compilaciones y builds (dist, next, etc.)
+dist/
+**/dist/
+.next/
+**/ .next/
+build/
+
+# Variables de entorno y secretos
 .env
+.env.local
+.env.production
+*.env
+
+# Archivos del sistema y editores
+.DS_Store
+.antigravity/
