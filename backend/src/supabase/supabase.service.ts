@@ -6,10 +6,9 @@ export class SupabaseService {
   private readonly supabase: SupabaseClient;
 
   constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
-    const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    const supabaseUrl = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL) as string;
+    const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '') as string;
+    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
   getClient(): SupabaseClient {

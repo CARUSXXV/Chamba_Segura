@@ -53,9 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
       updateSessionCookie(session);
       
-      if (_event === 'SIGNED_IN') {
-        router.push('/');
-      } else if (_event === 'SIGNED_OUT') {
+      if (_event === 'SIGNED_OUT') {
         router.push('/auth/login');
       }
     });

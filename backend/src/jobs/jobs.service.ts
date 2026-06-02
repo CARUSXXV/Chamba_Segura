@@ -9,7 +9,7 @@ export class JobsService {
   async searchJobs(filters: JobFilter) {
     let query = this.supabase
       .from('jobs')
-      .select('*, profiles(id, full_name, avatar_url)'); 
+      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url)'); 
 
     if (filters.category) {
       query = query.eq('category', filters.category);
@@ -29,7 +29,7 @@ export class JobsService {
   async getJobById(id: string) {
     const { data, error } = await this.supabase
       .from('jobs')
-      .select('*, profiles(id, full_name, avatar_url)')
+      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url)')
       .eq('id', id)
       .single();
 
