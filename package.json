@@ -1,0 +1,22 @@
+{
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.9.1",
+    "@types/react": "^19.2.16",
+    "@types/react-dom": "^19.2.3"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.24",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.1.24",
+    "@nestjs/testing": "^11.1.24",
+    "@supabase/supabase-js": "^2.106.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nestjs": "^0.0.1",
+    "next": "^16.2.7",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}
