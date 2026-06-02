@@ -14,14 +14,15 @@ export class AuthService {
   ) {
     const { data, error } = await this.supabaseService
       .getClient()
-      .auth.admin.createUser({
+      .auth.signUp({
         email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          username,
-          nombre_completo,
-          es_trabajador,
+        password, 
+        options: {
+          data: {
+            username,
+            nombre_completo,
+            es_trabajador,
+          },
         },
       });
 
