@@ -101,87 +101,87 @@ export default function VerPerfilPage() {
         </Link>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
-              <p className="text-gray-500 text-sm mt-1">Información de tu cuenta.</p>
+              <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
             </div>
-            <Link 
-              href="/perfil/editar"
-              className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
-            >
-              Editar Perfil
-            </Link>
+            <div className="flex items-center gap-3">
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                user?.user_metadata?.es_trabajador ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+              }`}>
+                {user?.user_metadata?.es_trabajador ? 'Trabajador' : 'Cliente'}
+              </span>
+              <Link 
+                href="/perfil/editar"
+                className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
+              >
+                Editar
+              </Link>
+            </div>
           </div>
 
           <div className="divide-y divide-gray-100">
-            <div className="p-8 flex items-center justify-between">
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Nombre completo</p>
-                <p className="text-lg font-semibold text-gray-900">{profileData.nombre_completo || '—'}</p>
+                <p className="text-xs text-gray-500">Nombre completo</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{profileData.nombre_completo || '—'}</p>
               </div>
             </div>
-            <div className="p-8 flex items-center justify-between">
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Nombre de usuario</p>
-                <p className="text-lg font-semibold text-gray-900">@{profileData.username || '—'}</p>
+                <p className="text-xs text-gray-500">Nombre de usuario</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">@{profileData.username || '—'}</p>
               </div>
             </div>
 
-            <div className="p-8 flex items-center justify-between">
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Correo de contacto</p>
-                <p className="text-lg font-semibold text-gray-900">{profileData.email_contacto || '—'}</p>
+                <p className="text-xs text-gray-500">Correo de contacto</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{profileData.email_contacto || '—'}</p>
               </div>
             </div>
-            <div className="p-8 flex items-center justify-between">
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Teléfono de contacto</p>
-                <p className="text-lg font-semibold text-gray-900">{profileData.telefono || '—'}</p>
+                <p className="text-xs text-gray-500">Teléfono de contacto</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{profileData.telefono || '—'}</p>
               </div>
             </div>
-            <div className="p-8 flex items-center justify-between">
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Correo electrónico</p>
-                <p className="text-lg font-semibold text-gray-900">{user?.email || '—'}</p>
-              </div>
-            </div>
-            <div className="p-8 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">Tipo de cuenta</p>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${
-                  user?.user_metadata?.es_trabajador ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
-                }`}>
-                  {user?.user_metadata?.es_trabajador ? 'Trabajador' : 'Cliente'}
-                </span>
+                <p className="text-xs text-gray-500">Correo electrónico</p>
+                <p className="text-sm font-medium text-gray-900 mt-0.5">{user?.email || '—'}</p>
               </div>
             </div>
           </div>
         </div>
         
         {/* Zona de Peligro (Danger Zone) */}
-        <div className="bg-red-50 rounded-2xl border border-red-200 p-8 mt-8 shadow-sm">
-          <h3 className="text-lg font-bold text-red-800 mb-2">Zona de Peligro</h3>
-          <p className="text-sm text-red-600 mb-6">
-            Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate bien antes de hacerlo.
-          </p>
-          <button 
-            onClick={handleDeleteAccount}
-            disabled={deleting}
-            className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-xl text-sm font-bold transition-all disabled:opacity-50 shadow-sm"
-          >
-            {deleting ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Eliminando...
-              </span>
-            ) : (
-              'Eliminar mi cuenta permanentemente'
-            )}
-          </button>
+        <div className="bg-red-50 rounded-xl border border-red-200 px-6 py-4 mt-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-red-800">Zona de Peligro</h3>
+              <p className="text-xs text-red-600 mt-0.5">
+                Eliminar tu cuenta es irreversible.
+              </p>
+            </div>
+            <button 
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
+            >
+              {deleting ? (
+                <span className="flex items-center gap-1.5">
+                  <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Eliminando...
+                </span>
+              ) : (
+                'Eliminar cuenta'
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -34,7 +34,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSession(session);
     updateSessionCookie(session);
     // Also need to set the session in the supabase client so subsequent calls are authenticated
-    supabase.auth.setSession(session);
+    // guardar sesión en el cliente; algunos flujos desde el backend
+    // pueden no incluir `refresh_token`. Evitar que esto lance errores
+    // y ensucie la consola. Sólo intentar si existe o manejar el fallo.
+    (async () => {
+      try {
+        // preferimos evitar llamar si no hay refresh_token
+        type MaybeSessionWithRefresh = Session & { refresh_token?: string };
+        const sess = session as MaybeSessionWithRefresh | null;
+        if (sess?.refresh_token) {
+          await supabase.auth.setSession(sess);
+        }
+      } catch (err) {
+        // No interrumpir el flujo de la UI por errores de refresh token
+        // Logueamos en consola para diagnóstico pero silencioso para usuarios
+        console.warn('No se pudo establecer la sesión en el cliente Supabase:', err);
+      }
+    })();
   };
 
   useEffect(() => {

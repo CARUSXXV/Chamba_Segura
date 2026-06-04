@@ -40,7 +40,8 @@ export class AuthService {
           id: userId,
           username: username,
           nombre_completo: nombre_completo,
-          es_trabajador: es_trabajador ? 'trabajador' : 'cliente',
+          // La columna `es_trabajador` en la BD es boolean, guardar true/false
+          es_trabajador: es_trabajador,
         }
       ]);
 

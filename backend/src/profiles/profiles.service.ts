@@ -6,15 +6,42 @@ export class ProfilesService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async getProfileById(id: string) {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .from('perfiles') // <-- Apuntando a tu tabla en español
+    const client = this.supabaseService.getClient();
+
+    const { data, error } = await client
+      .from('perfiles')
       .select('*')
       .eq('id', id)
       .single();
 
-    if (error || !data) throw new NotFoundException('Perfil no encontrado');
-    return data;
+    // Si existe la fila en la tabla `perfiles`, retornarla
+    if (!error && data) return data;
+
+    // Si no hay fila, intentar construir el perfil desde Auth (user_metadata)
+    try {
+      const { data: userData, error: userError } = await client.auth.admin.getUserById(id as string);
+      if (userError || !userData?.user) {
+        throw new NotFoundException('Perfil no encontrado');
+      }
+
+      const user = userData.user;
+      const profileFromAuth = {
+        id: user.id,
+        nombre_completo: (user.user_metadata as any)?.nombre_completo || null,
+        username: (user.user_metadata as any)?.username || null,
+        foto_url: (user.user_metadata as any)?.foto_url || null,
+        email_contacto: user.email || null,
+        telefono: (user.user_metadata as any)?.telefono || null,
+        email: user.email || null,
+        contractor_id: (user.user_metadata as any)?.contractor_id || null,
+        creado_el: user.created_at || null,
+        es_trabajador: (user.user_metadata as any)?.es_trabajador ?? false,
+      };
+
+      return profileFromAuth;
+    } catch (err) {
+      throw new NotFoundException('Perfil no encontrado');
+    }
   }
 
  async updateProfile(id: string, payload: any) {
