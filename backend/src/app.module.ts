@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { JobsModule } from './jobs/jobs.module';
 import { MessagesModule } from './messages/messages.module';
+import { ProfilesModule } from './profiles/profiles.module';
 import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { SupabaseModule } from './supabase/supabase.module';
     UsersModule,
     JobsModule,
     MessagesModule,
+    ProfilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
@@ -12,25 +12,45 @@ export class AuthService {
     nombre_completo: string,
     es_trabajador: boolean,
   ) {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .auth.signUp({
-        email,
-        password, 
-        options: {
-          data: {
-            username,
-            nombre_completo,
-            es_trabajador,
-          },
-        },
-      });
+    const supabase = this.supabaseService.getClient();
 
-    if (error) {
-      throw new BadRequestException(error.message);
+    // 1. Crear el usuario en la Autenticación de Supabase
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        username,
+        nombre_completo,
+        es_trabajador,
+      },
+    });
+
+    if (authError) {
+      throw new BadRequestException(authError.message);
     }
 
-    return data;
+    const userId = authData.user.id;
+
+    // 2. Crear automáticamente el registro en tu tabla "perfiles"
+    const { error: profileError } = await supabase
+      .from('perfiles') // <-- Aseguramos que apunte a tu tabla en español
+      .insert([
+        {
+          id: userId,
+          username: username,
+          nombre_completo: nombre_completo,
+          es_trabajador: es_trabajador ? 'trabajador' : 'cliente',
+        }
+      ]);
+
+    // 3. Sistema de seguridad: Si falla la tabla perfiles, borramos el Auth para no dejar cuentas rotas
+    if (profileError) {
+      await supabase.auth.admin.deleteUser(userId);
+      throw new InternalServerErrorException(`Error guardando en la tabla perfiles: ${profileError.message}`);
+    }
+
+    return authData;
   }
 
   async login(email: string, password: string) {
