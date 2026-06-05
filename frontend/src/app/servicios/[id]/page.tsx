@@ -1,0 +1,299 @@
+"use client";
+
+import { useAuth } from "@/context/AuthContext";
+import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchServicioById, Servicio } from "@/api/servicios";
+import { createContratacion, EstadoContratacion } from "@/api/contrataciones";
+import Link from "next/link";
+
+export default function DetalleServicioPage() {
+  const { user, session, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+
+  const [servicio, setServicio] = useState<Servicio | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [fechaCalendario, setFechaCalendario] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (!session) {
+        router.push("/auth/login");
+        return;
+      }
+
+      if (id) {
+        const loadServicio = async () => {
+          try {
+            const data = await fetchServicioById(session.access_token, id);
+            setServicio(data);
+          } catch (err) {
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Error al cargar el servicio",
+            );
+          } finally {
+            setLoading(false);
+          }
+        };
+        loadServicio();
+      }
+    }
+  }, [authLoading, session, id, router]);
+
+  const handleSolicitar = async () => {
+    if (!session?.access_token || !id || !fechaCalendario) return;
+
+    setIsRequesting(true);
+    try {
+      const res = await createContratacion(session.access_token, {
+        servicios_id: id,
+        fecha_calendario: new Date(fechaCalendario).toISOString(),
+        precio_final: servicio!.tarifa_promedio,
+      });
+
+      setShowModal(false);
+      if (res.estado_contrato === EstadoContratacion.PENDIENTE_FIRMA) {
+        setSuccessMsg(
+          "Solicitud enviada. Este servicio requiere firma de contrato. Por favor, revisa tu panel de contrataciones.",
+        );
+      } else {
+        setSuccessMsg("Solicitud de contratación enviada con éxito.");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Error al solicitar la contratación",
+      );
+      setIsRequesting(false);
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (error || !servicio) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Ups, algo salió mal
+          </h1>
+          <p className="text-gray-500 mb-6">
+            {error || "El servicio no existe."}
+          </p>
+          <Link
+            href="/"
+            className="text-blue-600 font-semibold hover:underline"
+          >
+            Volver al inicio
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const isOwner = user?.id === servicio.trabajador_id;
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </Link>
+            <span className="text-xl">🛡️</span>
+            <span className="text-lg font-black text-blue-600 tracking-tighter">
+              ChambaSegura
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-8">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100 uppercase tracking-wider">
+                {servicio.oficio}
+              </span>
+              {servicio.tipo_de_oficio && (
+                <span className="px-3 py-1 bg-gray-50 text-gray-600 text-xs font-medium rounded-full border border-gray-100 uppercase tracking-wider">
+                  {servicio.tipo_de_oficio}
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-3xl font-extrabold text-gray-900 mb-6">
+              {servicio.oficio}
+            </h1>
+
+            <div className="flex items-center gap-6 p-4 bg-gray-50 rounded-xl mb-8 border border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-lg">
+                  {servicio.perfiles?.nombre_completo?.charAt(0) || "?"}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-tight">
+                    Trabajador
+                  </p>
+                  <p className="text-sm font-bold text-gray-900">
+                    {servicio.perfiles?.nombre_completo ||
+                      "Usuario desconocido"}
+                  </p>
+                </div>
+              </div>
+              <div className="h-10 w-px bg-gray-200" />
+              <div>
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-tight">
+                  Tarifa Promedio
+                </p>
+                <p className="text-sm font-bold text-green-600">
+                  ${servicio.tarifa_promedio}
+                </p>
+              </div>
+            </div>
+
+            <div className="prose prose-blue max-w-none mb-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">
+                Descripción
+              </h3>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {servicio.descripcion}
+              </p>
+            </div>
+
+            {servicio.firma_contrato && (
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl mb-8 flex gap-3">
+                <span className="text-amber-600 text-xl">📜</span>
+                <div>
+                  <p className="text-amber-900 font-bold text-sm">
+                    Requiere Contrato
+                  </p>
+                  <p className="text-amber-700 text-xs">
+                    Este servicio requiere la firma de un acuerdo digital antes
+                    de comenzar.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-8 border-t border-gray-100">
+              {!isOwner && (
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="w-full flex justify-center items-center py-4 px-6 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg"
+                >
+                  Solicitar Contratación
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Solicitar Servicio
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">
+                    Fecha y Hora Preferida
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
+                    value={fechaCalendario}
+                    onChange={(e) => setFechaCalendario(e.target.value)}
+                  />
+                </div>
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <div className="flex justify-between items-center text-sm font-medium">
+                    <span className="text-gray-500">Tarifa propuesta:</span>
+                    <span className="text-gray-900 font-bold">
+                      ${servicio.tarifa_promedio}
+                    </span>
+                  </div>
+                </div>
+                {servicio.firma_contrato && (
+                  <p className="text-xs text-amber-600 font-medium italic">
+                    * Se te pedirá adjuntar el contrato firmado tras la
+                    solicitud.
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-3 mt-8">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSolicitar}
+                  disabled={!fechaCalendario || isRequesting}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {isRequesting ? "Procesando..." : "Confirmar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 text-center">
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+              ✓
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              ¡Solicitud Enviada!
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">{successMsg}</p>
+            <button
+              onClick={() => router.push("/dashboard/contrataciones")}
+              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700"
+            >
+              Ir a Mis Contrataciones
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

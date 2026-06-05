@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { fetchJobById, deleteJob, Job } from '@/api/jobs';
+import { createPostulacion, fetchPostulacionesByJob, updateEstadoPostulacion, Postulacion } from '@/api/postulaciones';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import Link from 'next/link';
 
@@ -18,6 +19,11 @@ export default function DetalleTrabajoPage() {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
+  const [loadingPostulaciones, setLoadingPostulaciones] = useState(false);
+  const [showPostularModal, setShowPostularModal] = useState(false);
+  const [mensajePostulacion, setMensajePostulacion] = useState('');
+  const [postulando, setPostulando] = useState(false);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,6 +38,18 @@ export default function DetalleTrabajoPage() {
           try {
             const data = await fetchJobById(session.access_token, id);
             setJob(data);
+
+            if (user?.id === data.contractor_id) {
+              setLoadingPostulaciones(true);
+              try {
+                const p = await fetchPostulacionesByJob(session.access_token, id);
+                setPostulaciones(p);
+              } catch {
+                /* silent */
+              } finally {
+                setLoadingPostulaciones(false);
+              }
+            }
           } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al cargar el trabajo');
           } finally {
@@ -55,6 +73,37 @@ export default function DetalleTrabajoPage() {
       setInfoMsg(err instanceof Error ? err.message : 'Error al eliminar el trabajo');
       setIsDeleting(false);
       setShowDeleteModal(false);
+    }
+  };
+
+  const handleEstadoPostulacion = async (postulacionId: string, nuevoEstado: 'aceptado' | 'rechazado') => {
+    if (!session?.access_token) return;
+    try {
+      await updateEstadoPostulacion(session.access_token, postulacionId, nuevoEstado);
+      const updated = postulaciones.map(p =>
+        p.id === postulacionId ? { ...p, estado: nuevoEstado } : p
+      );
+      setPostulaciones(updated);
+    } catch (err) {
+      setInfoMsg(err instanceof Error ? err.message : 'Error al gestionar postulación');
+    }
+  };
+
+  const handlePostular = async () => {
+    if (!session?.access_token || !id) return;
+    setPostulando(true);
+    try {
+      await createPostulacion(session.access_token, {
+        trabajo_id: id,
+        mensaje: mensajePostulacion.trim() || undefined,
+      });
+      setShowPostularModal(false);
+      setMensajePostulacion('');
+      setInfoMsg('Te postulaste exitosamente. El contratante revisará tu solicitud.');
+    } catch (err) {
+      setInfoMsg(err instanceof Error ? err.message : 'Error al postularte');
+    } finally {
+      setPostulando(false);
     }
   };
 
@@ -168,7 +217,7 @@ export default function DetalleTrabajoPage() {
               ) : isTrabajador ? (
                 <button
                   className="w-full flex justify-center items-center py-4 px-6 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg"
-                  onClick={() => setInfoMsg('Próximamente podrás postularte a este trabajo.')}
+                  onClick={() => setShowPostularModal(true)}
                 >
                   Postularme a este trabajo
                 </button>
@@ -176,7 +225,112 @@ export default function DetalleTrabajoPage() {
             </div>
           </div>
         </div>
+        {isOwner && (
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Postulaciones ({postulaciones.length})
+            </h2>
+            {loadingPostulaciones ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center text-gray-400">
+                Cargando postulaciones...
+              </div>
+            ) : postulaciones.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
+                <p className="text-gray-400">Aún no hay postulaciones para este trabajo.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {postulaciones.map((p) => (
+                  <div key={p.id} className="bg-white rounded-2xl border border-gray-200 p-5">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold shrink-0">
+                          {p.trabajador?.nombre_completo?.charAt(0) || '?'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 truncate">
+                            {p.trabajador?.nombre_completo || 'Trabajador'}
+                          </p>
+                          {p.mensaje && (
+                            <p className="text-sm text-gray-500 mt-1 line-clamp-2">{p.mensaje}</p>
+                          )}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(p.created_at).toLocaleDateString()} - {new Date(p.created_at).toLocaleTimeString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {p.estado === 'pendiente' ? (
+                          <>
+                            <button
+                              onClick={() => handleEstadoPostulacion(p.id, 'aceptado')}
+                              className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700"
+                            >
+                              Aceptar
+                            </button>
+                            <button
+                              onClick={() => handleEstadoPostulacion(p.id, 'rechazado')}
+                              className="px-4 py-2 border border-red-200 text-red-600 text-sm font-bold rounded-xl hover:bg-red-50"
+                            >
+                              Rechazar
+                            </button>
+                          </>
+                        ) : (
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            p.estado === 'aceptado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {p.estado === 'aceptado' ? 'Aceptado' : 'Rechazado'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>
+
+      {showPostularModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Postularme a este trabajo
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Cuéntale al contratante por qué eres la persona ideal para este trabajo.
+              </p>
+              <textarea
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none text-sm text-gray-900"
+                rows={4}
+                placeholder="Escribe un mensaje (opcional)..."
+                value={mensajePostulacion}
+                onChange={(e) => setMensajePostulacion(e.target.value)}
+              />
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowPostularModal(false);
+                    setMensajePostulacion('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePostular}
+                  disabled={postulando}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {postulando ? 'Postulando...' : 'Enviar Postulación'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ConfirmModal
         isOpen={showDeleteModal}
@@ -190,15 +344,27 @@ export default function DetalleTrabajoPage() {
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      <ConfirmModal
-        isOpen={!!infoMsg}
-        title="Información"
-        message={infoMsg || ''}
-        confirmLabel="Entendido"
-        variant="default"
-        onConfirm={() => setInfoMsg(null)}
-        onCancel={() => setInfoMsg(null)}
-      />
+      {infoMsg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 text-center">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl ${
+              infoMsg.includes('exitosamente') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+            }`}>
+              {infoMsg.includes('exitosamente') ? '✓' : '✕'}
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">
+              {infoMsg.includes('exitosamente') ? '¡Postulación Enviada!' : 'Error'}
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">{infoMsg}</p>
+            <button
+              onClick={() => setInfoMsg(null)}
+              className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

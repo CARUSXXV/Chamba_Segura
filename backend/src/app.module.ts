@@ -8,6 +8,9 @@ import { JobsModule } from './jobs/jobs.module';
 import { MessagesModule } from './messages/messages.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SupabaseModule } from './supabase/supabase.module';
+import { ServiciosModule } from './servicios/servicios.module';
+import { ContratacionesModule } from './contrataciones/contrataciones.module';
+import { PostulacionesModule } from './postulaciones/postulaciones.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { SupabaseModule } from './supabase/supabase.module';
     JobsModule,
     MessagesModule,
     ProfilesModule,
+    ServiciosModule,
+    ContratacionesModule,
+    PostulacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

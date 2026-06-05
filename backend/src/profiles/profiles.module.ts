@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ProfilesController } from './profiles.controller';
 import { ProfilesService } from './profiles.service';
 // Importamos SupabaseModule para inyectar el cliente
-import { SupabaseModule } from '../supabase/supabase.module'; 
+import { SupabaseModule } from '../supabase/supabase.module';
 
 @Module({
   imports: [SupabaseModule],

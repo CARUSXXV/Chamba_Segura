@@ -41,8 +41,8 @@ export default function EditarPerfilPage() {
             email_contacto: data.email_contacto || user?.user_metadata?.email_contacto || '',
             telefono: data.telefono || user?.user_metadata?.telefono || '',
           });
-        } catch (err) {
-          console.warn('Usando datos de sesión como respaldo.');
+        } catch (error) {
+          console.warn('Usando datos de sesión como respaldo.', error);
           setProfileData({
             nombre_completo: user?.user_metadata?.nombre_completo || '',
             username: user?.user_metadata?.username || '',
@@ -75,8 +75,8 @@ export default function EditarPerfilPage() {
       });
 
       router.push('/perfil');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar el perfil');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error al actualizar el perfil');
     } finally {
       setSaving(false);
     }
@@ -95,8 +95,8 @@ export default function EditarPerfilPage() {
       alert('Cuenta eliminada exitosamente.');
       signOut();
       router.push('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar la cuenta.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error al eliminar la cuenta.');
       setDeleting(false);
     }
   };

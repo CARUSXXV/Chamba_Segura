@@ -1,5 +1,16 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+
+export interface ProfileUpdatePayload {
+  nombre_completo?: string;
+  username?: string;
+  email_contacto?: string;
+  telefono?: string;
+}
 
 @Injectable()
 export class ProfilesService {
@@ -19,48 +30,54 @@ export class ProfilesService {
 
     // Si no hay fila, intentar construir el perfil desde Auth (user_metadata)
     try {
-      const { data: userData, error: userError } = await client.auth.admin.getUserById(id as string);
+      const { data: userData, error: userError } =
+        await client.auth.admin.getUserById(id);
       if (userError || !userData?.user) {
         throw new NotFoundException('Perfil no encontrado');
       }
 
       const user = userData.user;
+      const metadata = user.user_metadata as Record<string, unknown> | null;
       const profileFromAuth = {
         id: user.id,
-        nombre_completo: (user.user_metadata as any)?.nombre_completo || null,
-        username: (user.user_metadata as any)?.username || null,
-        foto_url: (user.user_metadata as any)?.foto_url || null,
+        nombre_completo: (metadata?.nombre_completo as string | null) || null,
+        username: (metadata?.username as string | null) || null,
+        foto_url: (metadata?.foto_url as string | null) || null,
         email_contacto: user.email || null,
-        telefono: (user.user_metadata as any)?.telefono || null,
+        telefono: (metadata?.telefono as string | null) || null,
         email: user.email || null,
-        contractor_id: (user.user_metadata as any)?.contractor_id || null,
+        contractor_id: (metadata?.contractor_id as string | null) || null,
         creado_el: user.created_at || null,
-        es_trabajador: (user.user_metadata as any)?.es_trabajador ?? false,
+        es_trabajador: (metadata?.es_trabajador as boolean) ?? false,
       };
 
       return profileFromAuth;
-    } catch (err) {
+    } catch (_error) {
       throw new NotFoundException('Perfil no encontrado');
     }
   }
 
- async updateProfile(id: string, payload: any) {
+  async updateProfile(id: string, payload: ProfileUpdatePayload) {
     // 1. Hacemos la consulta pero LE QUITAMOS el .single() al final
     const { data, error } = await this.supabaseService
       .getClient()
       .from('perfiles')
-      .update(payload)
+      .update(payload as unknown as never)
       .eq('id', id)
       .select();
 
     // 2. Si hay un error de sintaxis en la base de datos, lo atrapamos
     if (error) {
-      throw new InternalServerErrorException(`Error al actualizar el perfil: ${error.message}`);
+      throw new InternalServerErrorException(
+        `Error al actualizar el perfil: ${error.message}`,
+      );
     }
 
     // 3. Si Supabase devuelve un array vacío, significa que el ID no existe o fue bloqueado
     if (!data || data.length === 0) {
-      throw new NotFoundException('No se pudo actualizar. El perfil no existe o está bloqueado por permisos.');
+      throw new NotFoundException(
+        'No se pudo actualizar. El perfil no existe o está bloqueado por permisos.',
+      );
     }
 
     // 4. Si todo sale bien, retornamos manualmente el primer (y único) objeto
@@ -69,12 +86,14 @@ export class ProfilesService {
 
   async deleteProfile(id: string) {
     // Borrar de la tabla pública
-    const { error: dbError } = await this.supabaseService.getClient()
+    const { error: dbError } = await this.supabaseService
+      .getClient()
       .from('perfiles')
       .delete()
       .eq('id', id);
 
-    if (dbError) throw new InternalServerErrorException('Error al eliminar datos');
+    if (dbError)
+      throw new InternalServerErrorException('Error al eliminar datos');
 
     // Borrar de la autenticación de Supabase
     await this.supabaseService.getClient().auth.admin.deleteUser(id);

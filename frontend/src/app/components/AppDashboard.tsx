@@ -18,17 +18,42 @@ export default function AppDashboard() {
   const esTrabajador = user?.user_metadata?.es_trabajador === true;
 
   const links = [
-    {
-      href: '/trabajos',
-      title: esTrabajador ? 'Mis Trabajos' : 'Buscar Trabajadores',
-      desc: esTrabajador ? 'Gestiona tus trabajos y servicios' : 'Encuentra el profesional ideal',
-      color: 'blue',
-      icon: (
-        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
+    ...(esTrabajador
+      ? [{
+          href: '/trabajos',
+          title: 'Mis Trabajos',
+          desc: 'Busca trabajos y postúlate',
+          color: 'blue' as const,
+          icon: (
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          ),
+        }]
+      : [
+          {
+            href: '/trabajos',
+            title: 'Mis Trabajos',
+            desc: 'Tus trabajos publicados y postulaciones',
+            color: 'blue' as const,
+            icon: (
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            ),
+          },
+          {
+            href: '/servicios',
+            title: 'Buscar Servicios',
+            desc: 'Encuentra al profesional ideal',
+            color: 'sky' as const,
+            icon: (
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            ),
+          },
+        ]),
     {
       href: '/mensajeria',
       title: 'Mensajería',
@@ -37,6 +62,17 @@ export default function AppDashboard() {
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/dashboard/contrataciones',
+      title: 'Contrataciones',
+      desc: 'Gestiona solicitudes y contratos',
+      color: 'amber',
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
     },
@@ -53,10 +89,12 @@ export default function AppDashboard() {
     },
   ];
 
-  const colorMap = {
+  const colorMap: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:text-blue-700',
     purple: 'bg-purple-50 text-purple-600 group-hover:bg-purple-100 group-hover:text-purple-700',
     emerald: 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 group-hover:text-emerald-700',
+    amber: 'bg-amber-50 text-amber-600 group-hover:bg-amber-100 group-hover:text-amber-700',
+    sky: 'bg-sky-50 text-sky-600 group-hover:bg-sky-100 group-hover:text-sky-700',
   };
 
   const stats = [
@@ -171,10 +209,10 @@ export default function AppDashboard() {
               Aún no tienes actividad. {esTrabajador ? 'Publica un servicio' : 'Explora los trabajos'} para empezar.
             </p>
             <Link
-              href="/trabajos"
+              href={esTrabajador ? '/trabajos' : '/servicios'}
               className="inline-flex items-center gap-1 mt-2 text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors"
             >
-              {esTrabajador ? 'Ir a mis trabajos' : 'Ver trabajos disponibles'}
+              {esTrabajador ? 'Ir a mis trabajos' : 'Ver servicios disponibles'}
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>

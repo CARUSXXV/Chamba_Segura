@@ -120,7 +120,14 @@ export default function TrabajosPage() {
             <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Trabajos Disponibles</h1>
             <p className="text-gray-500">Explora oportunidades o publica una nueva necesidad.</p>
           </div>
-          {!isTrabajador && (
+          {isTrabajador ? (
+            <Link
+              href="/servicios/nuevo"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"
+            >
+              Publicar Servicio
+            </Link>
+          ) : (
             <Link 
               href="/trabajos/nuevo"
               className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"

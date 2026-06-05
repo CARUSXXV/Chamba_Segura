@@ -40,8 +40,8 @@ export default function VerPerfilPage() {
             email_contacto: data.email_contacto || '',
             telefono: data.telefono || '',
           });
-        } catch (err) {
-          console.warn('Usando datos de sesión como respaldo.');
+        } catch (error) {
+          console.warn('Usando datos de sesión como respaldo.', error);
           setProfileData({
             nombre_completo: user?.user_metadata?.nombre_completo || '',
             username: user?.user_metadata?.username || '',
@@ -75,9 +75,9 @@ export default function VerPerfilPage() {
       alert('Cuenta eliminada exitosamente.');
       signOut();
       router.push('/');
-    } catch (err) {
-      console.error(err);
-      alert(err instanceof Error ? err.message : 'Hubo un problema al intentar eliminar tu cuenta.');
+    } catch (error) {
+      console.error(error);
+      alert(error instanceof Error ? error.message : 'Hubo un problema al intentar eliminar tu cuenta.');
       setDeleting(false);
     }
   };

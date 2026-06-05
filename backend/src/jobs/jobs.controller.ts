@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Query,
+  Param,
+} from '@nestjs/common';
 import { JobsService } from './jobs.service';
 
 // Interfaces puras de TS en lugar de DTOs
@@ -8,7 +17,7 @@ export interface JobPayload {
   category: string;
   required_skills?: string[];
   budget?: number;
-  contractor_id: string; 
+  contractor_id: string;
 }
 
 export interface JobFilter {

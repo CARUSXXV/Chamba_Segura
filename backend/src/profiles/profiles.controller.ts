@@ -1,8 +1,14 @@
-import { Controller, Get, Put, Body, Param, UseGuards, Delete } from '@nestjs/common';
-// Importa tu servicio correspondiente
-import { ProfilesService } from './profiles.service'; 
-// Importa tu AuthGuard
-import { AuthGuard } from '../auth/auth.guard'; 
+import {
+  Controller,
+  Get,
+  Put,
+  Body,
+  Param,
+  UseGuards,
+  Delete,
+} from '@nestjs/common';
+import { ProfilesService, ProfileUpdatePayload } from './profiles.service';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('perfiles') // <-- El nombre debe coincidir con la URL del frontend
 export class ProfilesController {
@@ -18,7 +24,10 @@ export class ProfilesController {
   // Ruta para actualizar: PUT /api/v1/perfiles/:id
   @UseGuards(AuthGuard)
   @Put(':id')
-  async update(@Param('id') id: string, @Body() payload: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() payload: ProfileUpdatePayload,
+  ) {
     return this.profilesService.updateProfile(id, payload);
   }
 
