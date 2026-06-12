@@ -73,30 +73,43 @@ export class ContratacionesService {
     userId: string,
     isTrabajador: boolean,
   ): Promise<ContratacionesWithRelations[]> {
-    let query = this.client
+    if (isTrabajador) {
+      // Step 1: Get all servicio IDs belonging to this worker
+      const { data: workerServicios, error: svcError } = await this.client
+        .from('servicios')
+        .select('id')
+        .eq('trabajador_id', userId);
+
+      if (svcError) throw new InternalServerErrorException(svcError.message);
+
+      const servicioIds = (workerServicios ?? []).map(
+        (s: { id: string }) => s.id,
+      );
+
+      if (servicioIds.length === 0) return [];
+
+      // Step 2: Fetch contrataciones for those servicios
+      const { data, error } = await this.client
+        .from('contrataciones')
+        .select(
+          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo)',
+        )
+        .in('servicios_id', servicioIds);
+
+      if (error) throw new InternalServerErrorException(error.message);
+      return (data ?? []) as unknown as ContratacionesWithRelations[];
+    }
+
+    // For clients
+    const { data, error } = await this.client
       .from('contrataciones')
       .select(
         '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo)',
-      );
+      )
+      .eq('cliente_id', userId);
 
-    if (isTrabajador) {
-      query = query.eq('servicios.trabajador_id', userId);
-    } else {
-      query = query.eq('cliente_id', userId);
-    }
-
-    const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
-
-    const rows = (data ?? []) as unknown as ContratacionesWithRelations[];
-
-    if (isTrabajador) {
-      return rows.filter(
-        (c) => c.servicio && c.servicio.trabajador_id === userId,
-      );
-    }
-
-    return rows;
+    return (data ?? []) as unknown as ContratacionesWithRelations[];
   }
 
   async updateEstado(
@@ -142,9 +155,8 @@ export class ContratacionesService {
           contratacion.estado_contrato === EstadoContratacion.ACEPTADO ||
           contratacion.estado_contrato === EstadoContratacion.EN_PROGRESO
         ) {
-          throw new BadRequestException(
-            'No puedes cancelar un servicio ya aceptado o en progreso',
-          );
+          // Notify worker (TODO: replace with real notification system)
+          console.log(`[NOTIFICACIÓN] El cliente ${userId} canceló la contratación ${id} (estado: ${contratacion.estado_contrato}). Notificando al trabajador ${contratacion.servicio?.trabajador_id}.`);
         }
       } else if (nuevoEstado === EstadoContratacion.COMPLETADO) {
         if (contratacion.estado_contrato !== EstadoContratacion.EN_PROGRESO) {

@@ -10,7 +10,11 @@ export class SupabaseService {
     const supabaseUrl = (process.env.SUPABASE_URL ||
       process.env.NEXT_PUBLIC_SUPABASE_URL) as string;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    this.supabase = createClient<Database>(supabaseUrl, supabaseKey);
+    this.supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+      auth: {
+        persistSession: false,
+      },
+    });
   }
 
   getClient(): SupabaseClient<Database> {

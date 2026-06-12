@@ -94,7 +94,7 @@ export default function DetalleTrabajoPage() {
     setPostulando(true);
     try {
       await createPostulacion(session.access_token, {
-        trabajo_id: id,
+        job_id: id,
         mensaje: mensajePostulacion.trim() || undefined,
       });
       setShowPostularModal(false);
@@ -276,9 +276,8 @@ export default function DetalleTrabajoPage() {
                             </button>
                           </>
                         ) : (
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            p.estado === 'aceptado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${p.estado === 'aceptado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
                             {p.estado === 'aceptado' ? 'Aceptado' : 'Rechazado'}
                           </span>
                         )}
@@ -347,9 +346,8 @@ export default function DetalleTrabajoPage() {
       {infoMsg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6 text-center">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl ${
-              infoMsg.includes('exitosamente') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-            }`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl ${infoMsg.includes('exitosamente') ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+              }`}>
               {infoMsg.includes('exitosamente') ? '✓' : '✕'}
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-2">

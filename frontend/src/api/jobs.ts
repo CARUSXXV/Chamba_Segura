@@ -44,6 +44,7 @@ export async function fetchJobs(token: string, filters?: JobFilter): Promise<Job
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {
@@ -59,6 +60,7 @@ export async function fetchJobById(token: string, id: string): Promise<Job> {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {

@@ -5,7 +5,7 @@ import { AuthGuard } from '../auth/auth.guard';
 @Controller('chats')
 @UseGuards(AuthGuard)
 export class ChatsController {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(private readonly chatsService: ChatsService) { }
 
   // GET /api/v1/chats
   @Get()
@@ -16,7 +16,7 @@ export class ChatsController {
 
   // POST /api/v1/chats
   @Post()
-  async createChat(@Body() body: { cliente_id: string; trabajador_id: string; trabajo_id: string }) {
-    return this.chatsService.createOrGetChat(body.cliente_id, body.trabajador_id, body.trabajo_id);
+  async createChat(@Body() body: { cliente_id: string; trabajador_id: string; job_id: string }) {
+    return this.chatsService.createOrGetChat(body);
   }
 }

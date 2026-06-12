@@ -5,7 +5,7 @@ export interface Mensaje {
   chat_id: string;
   emisor_id: string;
   contenido: string;
-  creado_el: string;
+  enviado_el: string;
   emisor: { nombre_completo: string; username: string };
 }
 
@@ -14,6 +14,7 @@ export async function fetchChatHistory(token: string, chatId: string): Promise<M
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {

@@ -4,7 +4,7 @@ export type EstadoPostulacion = "pendiente" | "aceptado" | "rechazado";
 
 export interface Postulacion {
   id: string;
-  trabajo_id: string;
+  job_id: string;
   trabajador_id: string;
   mensaje: string | null;
   estado: EstadoPostulacion;
@@ -22,7 +22,7 @@ export interface Postulacion {
 }
 
 export interface PostulacionPayload {
-  trabajo_id: string;
+  job_id: string;
   mensaje?: string;
 }
 
@@ -48,6 +48,7 @@ export async function createPostulacion(token: string, payload: PostulacionPaylo
 export async function fetchPostulaciones(token: string): Promise<Postulacion[]> {
   const response = await fetch(POSTULACIONES_URL, {
     headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error('Error al obtener postulaciones');
   return response.json();
@@ -56,6 +57,7 @@ export async function fetchPostulaciones(token: string): Promise<Postulacion[]> 
 export async function fetchPostulacionesByJob(token: string, trabajoId: string): Promise<Postulacion[]> {
   const response = await fetch(`${POSTULACIONES_URL}/trabajo/${trabajoId}`, {
     headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error('Error al obtener postulaciones');
   return response.json();

@@ -25,9 +25,4 @@ export class AuthController {
     );
   }
 
-  @Post('login')
-  async login(@Body() body: { email: string; password: string }) {
-    const data = await this.authService.login(body.email, body.password);
-    return data; // Return full object { user, session }
-  }
 }

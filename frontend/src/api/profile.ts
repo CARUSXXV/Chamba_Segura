@@ -42,6 +42,7 @@ export async function fetchProfile(token: string, filters?: profileFilter): Prom
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {
@@ -57,6 +58,7 @@ export async function fetchProfileById(token: string, id: string): Promise<Profi
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {

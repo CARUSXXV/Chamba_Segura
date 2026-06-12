@@ -5,17 +5,20 @@ import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class MensajesService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private readonly supabase: SupabaseService) { }
 
   // Obtener el historial completo de un chat específico
   async getMessagesByChat(chatId: string) {
     const { data, error } = await this.supabase.getClient()
       .from('mensajes')
-      .select('*, sender:perfiles(nombre_completo, username)')
+      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
       .eq('chat_id', chatId)
-      .order('creado_el', { ascending: true }); // Orden cronológico para el chat
+      .order('enviado_el', { ascending: true }); // Orden cronológico para el chat
 
-    if (error) throw new InternalServerErrorException('Error cargando el historial de mensajes');
+    if (error) {
+      console.error(error);
+      throw new InternalServerErrorException(error.message || 'Error cargando el historial de mensajes');
+    }
     return data;
   }
 
@@ -23,11 +26,17 @@ export class MensajesService {
   async saveMessage(payload: { chat_id: string; emisor_id: string; contenido: string }) {
     const { data, error } = await this.supabase.getClient()
       .from('mensajes')
-      .insert([payload] as any)
-      .select('*, sender:perfiles(nombre_completo, username)')
+      .insert([{
+        id: crypto.randomUUID(),
+        ...payload
+      }] as any)
+      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
       .single();
 
-    if (error) throw new InternalServerErrorException('Error guardando el mensaje');
+    if (error) {
+      console.error(error);
+      throw new InternalServerErrorException(error.message || 'Error guardando el mensaje');
+    }
     return data;
   }
 
@@ -38,7 +47,7 @@ export class MensajesService {
       .update({ contenido: nuevo_contenido } as never)
       .eq('id', id)
       .eq('emisor_id', emisor_id) // Seguridad: Solo el dueño puede editarlo
-      .select('*, emisor:perfiles(nombre_completo, username)')
+      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
       .single();
 
     if (error) throw new InternalServerErrorException(`Error editando mensaje: ${error.message}`);

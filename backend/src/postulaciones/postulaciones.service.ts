@@ -12,7 +12,7 @@ export type EstadoPostulacion = 'pendiente' | 'aceptado' | 'rechazado';
 
 interface PostulacionRowWithJob {
   id: string;
-  trabajo_id: string;
+  job_id: string;
   trabajador_id: string;
   mensaje: string | null;
   estado: string | null;
@@ -21,19 +21,19 @@ interface PostulacionRowWithJob {
 }
 
 export interface PostulacionPayload {
-  trabajo_id: string;
+  job_id: string;
   mensaje?: string;
 }
 
 @Injectable()
 export class PostulacionesService {
-  constructor(private readonly supabase: SupabaseClient<Database>) {}
+  constructor(private readonly supabase: SupabaseClient<Database>) { }
 
   async create(payload: PostulacionPayload, trabajadorId: string) {
     const { data: rawTrabajo, error: trabajoError } = await this.supabase
       .from('jobs')
       .select('contractor_id')
-      .eq('id', payload.trabajo_id)
+      .eq('id', payload.job_id)
       .single();
 
     if (trabajoError || !rawTrabajo)
@@ -47,7 +47,7 @@ export class PostulacionesService {
     const { data: existente } = await this.supabase
       .from('postulaciones')
       .select('id')
-      .eq('trabajo_id', payload.trabajo_id)
+      .eq('job_id', payload.job_id)
       .eq('trabajador_id', trabajadorId)
       .maybeSingle();
 
@@ -57,7 +57,7 @@ export class PostulacionesService {
     const { data, error } = await this.supabase
       .from('postulaciones')
       .insert({
-        trabajo_id: payload.trabajo_id,
+        job_id: payload.job_id,
         trabajador_id: trabajadorId,
         mensaje: payload.mensaje ?? null,
         estado: 'pendiente',
@@ -73,13 +73,13 @@ export class PostulacionesService {
     return data;
   }
 
-  async findByJobId(trabajoId: string) {
+  async findByJobId(jobId: string) {
     const { data, error } = await this.supabase
       .from('postulaciones')
       .select(
         '*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
       )
-      .eq('trabajo_id', trabajoId)
+      .eq('job_id', jobId)
       .order('created_at', { ascending: false });
 
     if (error)
@@ -144,7 +144,7 @@ export class PostulacionesService {
       const { error: updateError } = await this.supabase
         .from('postulaciones')
         .update({ estado: 'rechazado' } as never)
-        .eq('trabajo_id', postulacion.trabajo_id)
+        .eq('job_id', postulacion.job_id)
         .eq('estado', 'pendiente')
         .neq('id', id);
 
@@ -153,7 +153,7 @@ export class PostulacionesService {
           `Error al rechazar otras postulaciones: ${updateError.message}`,
         );
 
-      const trabajoId = postulacion.trabajo_id;
+      const trabajoId = postulacion.job_id;
       const { data: trabajoDatos } = await this.supabase
         .from('jobs')
         .select('budget')
@@ -196,7 +196,7 @@ export class PostulacionesService {
           id: crypto.randomUUID(),
           cliente_id: userId,
           servicios_id: serviciosId,
-          estado_contrato: 'solicitud_pendiente',
+          estado_contrato: 'aceptado',
           fecha_calendario: new Date().toISOString(),
           precio_final: precioFinal,
         } as never);

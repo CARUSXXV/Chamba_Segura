@@ -18,6 +18,7 @@ export interface Contratacion {
   fecha_calendario: string;
   precio_final: number;
   servicio?: Servicio & {
+    trabajador_id?: string;
     trabajador?: { nombre_completo: string };
   };
   cliente?: { nombre_completo: string };
@@ -36,6 +37,7 @@ const CONTRATACIONES_URL = `${API_BASE_URL}/contrataciones`;
 export async function fetchContrataciones(token: string): Promise<Contratacion[]> {
   const response = await fetch(CONTRATACIONES_URL, {
     headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error('Error al obtener contrataciones');
   return response.json();

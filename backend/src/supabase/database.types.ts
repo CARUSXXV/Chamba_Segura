@@ -61,7 +61,7 @@ export interface JobsRow {
 
 export interface PostulacionesRow {
   id: string;
-  trabajo_id: string;
+  job: string;
   trabajador_id: string;
   mensaje: string | null;
   estado: string | null;
@@ -70,13 +70,13 @@ export interface PostulacionesRow {
 
 export interface PostulacionesWithRelations extends PostulacionesRow {
   trabajo?:
-    | (JobsRow & {
-        perfiles?: {
-          nombre_completo?: string | null;
-          foto_url?: string | null;
-        } | null;
-      })
-    | null;
+  | (JobsRow & {
+    perfiles?: {
+      nombre_completo?: string | null;
+      foto_url?: string | null;
+    } | null;
+  })
+  | null;
   trabajador?: {
     nombre_completo?: string | null;
     foto_url?: string | null;

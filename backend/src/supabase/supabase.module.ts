@@ -15,7 +15,11 @@ import type { Database } from './database.types';
           process.env.NEXT_PUBLIC_SUPABASE_URL ||
           '';
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-        return createClient<Database>(supabaseUrl, supabaseKey);
+        return createClient<Database>(supabaseUrl, supabaseKey, {
+          auth: {
+            persistSession: false,
+          },
+        });
       },
     },
   ],

@@ -57,19 +57,6 @@ export class AuthService {
 
     return authData;
   }
-
-  async login(email: string, password: string) {
-    const { data, error } = await this.supabaseService
-      .getClient()
-      .auth.signInWithPassword({
-        email,
-        password,
-      });
-
-    if (error) {
-      throw new BadRequestException(error.message);
-    }
-
-    return data;
-  }
 }
+
+

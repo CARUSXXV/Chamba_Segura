@@ -10,6 +10,7 @@ import {
   Contratacion,
   uploadDocumentoContrato,
 } from "@/api/contrataciones";
+import { createChat } from "@/api/chats";
 import Link from "next/link";
 
 export default function DashboardContratacionesPage() {
@@ -73,6 +74,20 @@ export default function DashboardContratacionesPage() {
     } catch (error) {
       console.error(error);
       alert("Error al subir documento");
+    }
+  };
+
+  const handleOpenChat = async (c: Contratacion) => {
+    if (!session?.access_token || !user?.id) return;
+    try {
+      await createChat(session.access_token, {
+        cliente_id: c.cliente_id,
+        trabajador_id: c.servicio?.trabajador_id || "",
+        job_id: c.id,
+      });
+      router.push("/mensajeria");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al abrir chat");
     }
   };
 
@@ -191,24 +206,23 @@ export default function DashboardContratacionesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${
-                          c.estado_contrato ===
+                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${c.estado_contrato ===
                           EstadoContratacion.SOLICITUD_PENDIENTE
-                            ? "bg-amber-100 text-amber-700"
+                          ? "bg-amber-100 text-amber-700"
+                          : c.estado_contrato ===
+                            EstadoContratacion.PENDIENTE_FIRMA
+                            ? "bg-purple-100 text-purple-700"
                             : c.estado_contrato ===
-                                EstadoContratacion.PENDIENTE_FIRMA
-                              ? "bg-purple-100 text-purple-700"
+                              EstadoContratacion.ACEPTADO
+                              ? "bg-blue-100 text-blue-700"
                               : c.estado_contrato ===
-                                  EstadoContratacion.ACEPTADO
-                                ? "bg-blue-100 text-blue-700"
+                                EstadoContratacion.EN_PROGRESO
+                                ? "bg-green-100 text-green-700"
                                 : c.estado_contrato ===
-                                    EstadoContratacion.EN_PROGRESO
-                                  ? "bg-green-100 text-green-700"
-                                  : c.estado_contrato ===
-                                      EstadoContratacion.COMPLETADO
-                                    ? "bg-gray-100 text-gray-700"
-                                    : "bg-red-100 text-red-700"
-                        }`}
+                                  EstadoContratacion.COMPLETADO
+                                  ? "bg-gray-100 text-gray-700"
+                                  : "bg-red-100 text-red-700"
+                          }`}
                       >
                         {c.estado_contrato.replace("_", " ")}
                       </span>
@@ -246,7 +260,7 @@ export default function DashboardContratacionesPage() {
                     {/* Acciones de Trabajador */}
                     {isTrabajador &&
                       c.estado_contrato ===
-                        EstadoContratacion.SOLICITUD_PENDIENTE && (
+                      EstadoContratacion.SOLICITUD_PENDIENTE && (
                         <>
                           <button
                             onClick={() =>
@@ -301,10 +315,22 @@ export default function DashboardContratacionesPage() {
                         </button>
                       )}
 
+                    {/* Chat para ambos roles en estados activos o pendientes */}
+                    {(c.estado_contrato === EstadoContratacion.SOLICITUD_PENDIENTE ||
+                      c.estado_contrato === EstadoContratacion.ACEPTADO ||
+                      c.estado_contrato === EstadoContratacion.EN_PROGRESO) && (
+                        <button
+                          onClick={() => handleOpenChat(c)}
+                          className="w-full py-2 bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200"
+                        >
+                          💬 Abrir Chat
+                        </button>
+                      )}
+
                     {/* Acciones de Cliente */}
                     {!isTrabajador &&
                       c.estado_contrato ===
-                        EstadoContratacion.PENDIENTE_FIRMA && (
+                      EstadoContratacion.PENDIENTE_FIRMA && (
                         <button
                           onClick={() => handleSimulateUpload(c.id)}
                           className="w-full py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600"
@@ -313,20 +339,21 @@ export default function DashboardContratacionesPage() {
                         </button>
                       )}
                     {!isTrabajador &&
-                      (c.estado_contrato ===
-                        EstadoContratacion.SOLICITUD_PENDIENTE ||
-                        c.estado_contrato ===
-                          EstadoContratacion.PENDIENTE_FIRMA) && (
+                      (c.estado_contrato === EstadoContratacion.SOLICITUD_PENDIENTE ||
+                        c.estado_contrato === EstadoContratacion.PENDIENTE_FIRMA ||
+                        c.estado_contrato === EstadoContratacion.ACEPTADO ||
+                        c.estado_contrato === EstadoContratacion.EN_PROGRESO) && (
                         <button
-                          onClick={() =>
-                            handleUpdateEstado(
-                              c.id,
-                              EstadoContratacion.CANCELADO,
-                            )
-                          }
-                          className="w-full py-2 border border-gray-200 text-gray-500 text-sm font-bold rounded-lg hover:bg-gray-50"
+                          onClick={() => {
+                            if (c.estado_contrato === EstadoContratacion.ACEPTADO || c.estado_contrato === EstadoContratacion.EN_PROGRESO) {
+                              const conf = confirm("¿Estás seguro de que deseas cancelar este trabajo en progreso? Se notificará al trabajador.");
+                              if (!conf) return;
+                            }
+                            handleUpdateEstado(c.id, EstadoContratacion.CANCELADO);
+                          }}
+                          className="w-full py-2 border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-50"
                         >
-                          Cancelar Solicitud
+                          Cancelar Trabajo
                         </button>
                       )}
                     {!isTrabajador &&

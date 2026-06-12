@@ -28,6 +28,7 @@ const SERVICIOS_URL = `${API_BASE_URL}/servicios`;
 export async function fetchServicios(token: string): Promise<Servicio[]> {
   const response = await fetch(SERVICIOS_URL, {
     headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error('Error al obtener servicios');
   return response.json();
@@ -36,6 +37,7 @@ export async function fetchServicios(token: string): Promise<Servicio[]> {
 export async function fetchServicioById(token: string, id: string): Promise<Servicio> {
   const response = await fetch(`${SERVICIOS_URL}/${id}`, {
     headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
   });
   if (!response.ok) throw new Error('Error al obtener el servicio');
   return response.json();

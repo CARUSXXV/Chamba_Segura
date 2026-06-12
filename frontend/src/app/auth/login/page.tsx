@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/utils/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,23 +20,20 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:4000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al iniciar sesión');
+      if (authError) {
+        throw new Error(authError.message || 'Error al iniciar sesión');
       }
 
       if (data.user && data.session) {
         setAuth(data.user, data.session);
         router.push('/');
       } else {
-        throw new Error('Respuesta inválida del servidor');
+        throw new Error('Respuesta inválida de Supabase');
       }
     } catch (err: unknown) {
       if (err instanceof Error) {

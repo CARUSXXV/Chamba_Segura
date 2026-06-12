@@ -4,7 +4,7 @@ export interface Chat {
   id: string;
   cliente_id: string;
   trabajador_id: string;
-  trabajo_id: string;
+  job_id: string;
   creado_el: string;
   cliente: { nombre_completo: string; username: string; foto_url?: string };
   trabajador: { nombre_completo: string; username: string; foto_url?: string };
@@ -15,6 +15,7 @@ export async function fetchMyChats(token: string): Promise<Chat[]> {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
+    cache: 'no-store',
   });
 
   if (!response.ok) {
@@ -25,7 +26,7 @@ export async function fetchMyChats(token: string): Promise<Chat[]> {
   return response.json();
 }
 
-export async function createChat(token: string, payload: { cliente_id: string; trabajador_id: string; trabajo_id: string }): Promise<Chat> {
+export async function createChat(token: string, payload: { cliente_id: string; trabajador_id: string; job_id: string }): Promise<Chat> {
   const response = await fetch(`${API_BASE_URL}/chats`, {
     method: 'POST',
     headers: {
