@@ -10,6 +10,10 @@ import {
   Contratacion,
   uploadDocumentoContrato,
 } from "@/api/contrataciones";
+import {
+  fetchPostulaciones,
+  Postulacion,
+} from "@/api/postulaciones";
 import { createChat } from "@/api/chats";
 import Link from "next/link";
 
@@ -18,6 +22,7 @@ export default function DashboardContratacionesPage() {
   const router = useRouter();
 
   const [contrataciones, setContrataciones] = useState<Contratacion[]>([]);
+  const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"pendientes" | "activos" | "historial">(
@@ -32,11 +37,15 @@ export default function DashboardContratacionesPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchContrataciones(accessToken);
-      setContrataciones(data);
+      const [cData, pData] = await Promise.all([
+        fetchContrataciones(accessToken),
+        fetchPostulaciones(accessToken),
+      ]);
+      setContrataciones(cData);
+      setPostulaciones(pData);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Error al cargar contrataciones",
+        err instanceof Error ? err.message : "Error al cargar datos",
       );
     } finally {
       setLoading(false);
@@ -83,7 +92,7 @@ export default function DashboardContratacionesPage() {
       await createChat(session.access_token, {
         cliente_id: c.cliente_id,
         trabajador_id: c.servicio?.trabajador_id || "",
-        job_id: c.id,
+        job_id: c.job_id || c.id,
       });
       router.push("/mensajeria");
     } catch (err) {
@@ -91,7 +100,7 @@ export default function DashboardContratacionesPage() {
     }
   };
 
-  const filtered = contrataciones.filter((c) => {
+  const filteredContrataciones = contrataciones.filter((c) => {
     if (tab === "pendientes")
       return [
         EstadoContratacion.PENDIENTE_FIRMA,
@@ -109,6 +118,14 @@ export default function DashboardContratacionesPage() {
       ].includes(c.estado_contrato);
     return true;
   });
+
+  const postulacionesPendientes =
+    tab === "pendientes"
+      ? postulaciones.filter((p) => p.estado === "pendiente")
+      : [];
+
+  const hasPendientes =
+    postulacionesPendientes.length > 0 || filteredContrataciones.length > 0;
 
   if (authLoading || loading) {
     return (
@@ -189,7 +206,13 @@ export default function DashboardContratacionesPage() {
           </div>
         ) : null}
 
-        {filtered.length === 0 ? (
+        {!hasPendientes && tab === "pendientes" ? (
+          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+            <p className="text-gray-400">
+              No hay solicitudes ni contrataciones pendientes.
+            </p>
+          </div>
+        ) : tab !== "pendientes" && filteredContrataciones.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
             <p className="text-gray-400">
               No hay contrataciones en esta sección.
@@ -197,7 +220,96 @@ export default function DashboardContratacionesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
-            {filtered.map((c) => (
+            {/* Postulaciones pendientes (solo en tab pendientes) */}
+            {postulacionesPendientes.map((p) => (
+              <div
+                key={`post-${p.id}`}
+                className="bg-white rounded-2xl border border-amber-200 border-l-4 border-l-amber-400 p-6 shadow-sm hover:shadow-md transition-all"
+              >
+                <div className="flex flex-wrap justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700">
+                        {isTrabajador ? "Postulación enviada" : "Solicitud pendiente"}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                      {isTrabajador
+                        ? p.trabajo?.title || "Trabajo solicitado"
+                        : p.trabajo?.title || "Solicitud de trabajo"}
+                    </h3>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <p>📅 {new Date(p.created_at).toLocaleDateString()}</p>
+                      {p.trabajo?.budget ? (
+                        <p>💰 <span className="font-bold text-gray-900">${p.trabajo.budget}</span></p>
+                      ) : null}
+                    </div>
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
+                        {isTrabajador
+                          ? p.trabajo?.perfiles?.nombre_completo?.charAt(0)
+                          : p.trabajador?.nombre_completo?.charAt(0)}
+                      </div>
+                      <p className="text-xs font-semibold text-gray-700">
+                        {isTrabajador
+                          ? `Contratante: ${p.trabajo?.perfiles?.nombre_completo || "Desconocido"}`
+                          : `Trabajador: ${p.trabajador?.nombre_completo || "Desconocido"}`}
+                      </p>
+                    </div>
+                    {!isTrabajador && p.mensaje && (
+                      <p className="mt-2 text-sm text-gray-500 italic line-clamp-2">
+                        "{p.mensaje}"
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 min-w-37.5">
+                    {!isTrabajador && (
+                      <>
+                        <button
+                          onClick={async () => {
+                            if (!session?.access_token) return;
+                            try {
+                              const { updateEstadoPostulacion } = await import("@/api/postulaciones");
+                              await updateEstadoPostulacion(session.access_token, p.id, "aceptado");
+                              loadData();
+                            } catch (err) {
+                              alert(err instanceof Error ? err.message : "Error al aceptar");
+                            }
+                          }}
+                          className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700"
+                        >
+                          Aceptar
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (!session?.access_token) return;
+                            try {
+                              const { updateEstadoPostulacion } = await import("@/api/postulaciones");
+                              await updateEstadoPostulacion(session.access_token, p.id, "rechazado");
+                              loadData();
+                            } catch (err) {
+                              alert(err instanceof Error ? err.message : "Error al rechazar");
+                            }
+                          }}
+                          className="w-full py-2 border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-50"
+                        >
+                          Rechazar
+                        </button>
+                      </>
+                    )}
+                    {isTrabajador && (
+                      <div className="text-xs text-gray-400 text-center py-2">
+                        Esperando respuesta del contratante
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {/* Contrataciones */}
+            {filteredContrataciones.map((c) => (
               <div
                 key={c.id}
                 className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
@@ -231,8 +343,13 @@ export default function DashboardContratacionesPage() {
                       </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {c.servicio?.oficio || "Servicio Personalizado"}
+                      {c.trabajo?.title || c.servicio?.oficio || "Servicio Personalizado"}
                     </h3>
+                    {c.trabajo?.title && c.servicio?.oficio && c.trabajo.title !== c.servicio.oficio && (
+                      <p className="text-xs text-gray-400 mb-1">
+                        Servicio: {c.servicio.oficio}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <p>📅 {new Date(c.fecha_calendario).toLocaleString()}</p>
                       <p>
@@ -242,6 +359,11 @@ export default function DashboardContratacionesPage() {
                         </span>
                       </p>
                     </div>
+                    {c.trabajo?.description && (
+                      <p className="mt-2 text-sm text-gray-500 line-clamp-2">
+                        {c.trabajo.description}
+                      </p>
+                    )}
                     <div className="mt-4 flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
                         {isTrabajador

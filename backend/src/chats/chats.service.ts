@@ -1,114 +1,74 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
-
-export interface chatPayload {
-  cliente_id: string,
-  trabajador_id: string,
-  job_id: string
-}
 @Injectable()
 export class ChatsService {
   constructor(private readonly supabase: SupabaseService) { }
 
-  // 1. Obtener todos los chats de un usuario
+  private get client() {
+    return this.supabase.getClient();
+  }
+
   async getUserChats(userId: string) {
-    const { data, error } = await this.supabase.getClient()
+    const { data, error } = await this.client
       .from('chats')
-      .select(`
+      .select(
+        `
         *,
         cliente:perfiles!chats_cliente_id_fkey(nombre_completo, username, foto_url),
         trabajador:perfiles!chats_trabajador_id_fkey(nombre_completo, username, foto_url)
-      `)
-      // Trae los chats donde el usuario sea el cliente O el trabajador
+      `,
+      )
       .or(`cliente_id.eq.${userId},trabajador_id.eq.${userId}`)
       .order('creado_el', { ascending: false });
 
-    if (error) throw new InternalServerErrorException(`Error al obtener chats: ${error.message}`);
+    if (error)
+      throw new InternalServerErrorException(
+        `Error al obtener chats: ${error.message}`,
+      );
     return data;
   }
 
-  // 2. Iniciar un nuevo chat (o devolverlo si ya existe)
-  async createOrGetChat(payload: chatPayload) {
-    const client = this.supabase.getClient();
-
-    // Verificamos si ya existe un chat para este trabajo exacto
-    const { data: existingChat } = await client
+  async createChat(cliente_id: string, trabajador_id: string, job_id: string) {
+    const { data: existingChat } = await this.client
       .from('chats')
       .select('*')
-      .eq('job_id', payload.job_id)
-      .eq('cliente_id', payload.cliente_id)
-      .eq('trabajador_id', payload.trabajador_id)
-      .single();
+      .eq('job_id', job_id)
+      .eq('cliente_id', cliente_id)
+      .eq('trabajador_id', trabajador_id)
+      .maybeSingle();
 
     if (existingChat) return existingChat;
 
-    // Si no existe, creamos uno nuevo
-    const { data: newChat, error } = await client
+    const { data: newChat, error } = await this.client
       .from('chats')
-      .insert([{
+      .insert({
         id: crypto.randomUUID(),
-        cliente_id: payload.cliente_id,
-        trabajador_id: payload.trabajador_id,
-        job_id: payload.job_id,
-      }] as any)
+        cliente_id,
+        trabajador_id,
+        job_id,
+      } as never)
       .select()
       .single();
 
-    if (error) throw new InternalServerErrorException(`Error al crear chat: ${error.message}`);
+    if (error)
+      throw new InternalServerErrorException(
+        `Error al crear chat: ${error.message}`,
+      );
     return newChat;
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async autoCleanupOldChats() {
-    console.log('🧹 Ejecutando limpieza automática de chats antiguos...');
+  async findChatById(chatId: string) {
+    const { data, error } = await this.client
+      .from('chats')
+      .select('*')
+      .eq('id', chatId)
+      .maybeSingle();
 
-    // Supongamos que 1 mes atrás es nuestra fecha límite
-    const unMesAtras = new Date();
-    unMesAtras.setMonth(unMesAtras.getMonth() - 2);
-    const fechaLimite = unMesAtras.toISOString();
-
-    const client = this.supabase.getClient();
-
-    try {
-      // Paso 1: Buscar trabajos que estén "completados"
-      // (Asumiendo que tienes una tabla de trabajos con un estado)
-      const { data: trabajosCompletados } = await client
-        .from('jobs') // Ajusta el nombre a tu tabla de trabajos
-        .select('id')
-        .eq('estado', 'completado');
-
-      if (!trabajosCompletados || trabajosCompletados.length === 0) return;
-
-      const idsTrabajos = trabajosCompletados.map((t: { id: string }) => t.id);
-
-      // Paso 2: Buscar chats de esos trabajos cuyo "ultimo_mensaje_el" sea mayor a 1 mes
-
-      const { data: chatsViejos } = await client
-        .from('chats')
-        .select('id')
-        .in('job_id', idsTrabajos)
-        .lt('ultimo_mensaje_el', fechaLimite);
-
-      if (!chatsViejos || chatsViejos.length === 0) {
-        console.log('✅ No hay chats inactivos para eliminar hoy.');
-        return;
-      }
-
-      const idsChatsABorrar = chatsViejos.map((c: { id: string }) => c.id);
-
-      // Paso 3: Eliminar los chats (Supabase en cascada borrará también sus mensajes)
-      const { error } = await client
-        .from('chats')
-        .delete()
-        .in('id', idsChatsABorrar);
-
-      if (error) throw error;
-
-      console.log(`🗑️ Limpieza exitosa: Se eliminaron ${idsChatsABorrar.length} chats inactivos.`);
-    } catch (error) {
-      console.error('❌ Error durante la limpieza automática de chats:', error);
-    }
+    if (error)
+      throw new InternalServerErrorException(
+        `Error al buscar chat: ${error.message}`,
+      );
+    return data;
   }
 }

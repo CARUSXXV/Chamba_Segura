@@ -68,7 +68,7 @@ export class ServiciosService {
         'Error al crear servicio: sin datos de retorno',
       );
     }
-    return data as unknown as ServicioDetails;
+    return data;
   }
 
   async update(

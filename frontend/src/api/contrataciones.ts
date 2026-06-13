@@ -13,6 +13,7 @@ export interface Contratacion {
   id: string;
   servicios_id: string;
   cliente_id: string;
+  job_id?: string;
   estado_contrato: EstadoContratacion;
   documento_contrato_url?: string;
   fecha_calendario: string;
@@ -23,6 +24,10 @@ export interface Contratacion {
   };
   cliente?: { nombre_completo: string };
   trabajador?: { nombre_completo: string };
+  trabajo?: {
+    title?: string;
+    description?: string;
+  };
 }
 
 export interface ContratacionPayload {

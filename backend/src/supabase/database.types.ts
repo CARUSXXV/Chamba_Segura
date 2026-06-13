@@ -32,6 +32,7 @@ export interface ContratacionesRow {
   id: string;
   cliente_id: string;
   servicios_id: string;
+  job_id?: string | null;
   estado_contrato: string | null;
   fecha_calendario: string | null;
   precio_final: number | null;
@@ -46,6 +47,10 @@ export interface ContratacionesWithRelations extends ContratacionesRow {
   } | null;
   cliente?: {
     nombre_completo?: string | null;
+  } | null;
+  trabajo?: {
+    title?: string | null;
+    description?: string | null;
   } | null;
 }
 
@@ -70,17 +75,33 @@ export interface PostulacionesRow {
 
 export interface PostulacionesWithRelations extends PostulacionesRow {
   trabajo?:
-  | (JobsRow & {
-    perfiles?: {
-      nombre_completo?: string | null;
-      foto_url?: string | null;
-    } | null;
-  })
-  | null;
+    | (JobsRow & {
+        perfiles?: {
+          nombre_completo?: string | null;
+          foto_url?: string | null;
+        } | null;
+      })
+    | null;
   trabajador?: {
     nombre_completo?: string | null;
     foto_url?: string | null;
   } | null;
+}
+
+export interface ChatsRow {
+  id: string;
+  cliente_id: string;
+  trabajador_id: string;
+  job_id: string;
+  creado_el: string;
+}
+
+export interface MensajesRow {
+  id: string;
+  chat_id: string;
+  emisor_id: string;
+  contenido: string;
+  enviado_el: string;
 }
 
 export interface Database {
@@ -128,6 +149,20 @@ export interface Database {
           estado?: string | null;
         };
         Update: Partial<PostulacionesRow>;
+        Relationships: [];
+      };
+      chats: {
+        Row: ChatsRow;
+        Insert: Partial<ChatsRow> &
+          Pick<ChatsRow, 'id' | 'cliente_id' | 'trabajador_id' | 'job_id'>;
+        Update: Partial<ChatsRow>;
+        Relationships: [];
+      };
+      mensajes: {
+        Row: MensajesRow;
+        Insert: Partial<MensajesRow> &
+          Pick<MensajesRow, 'id' | 'chat_id' | 'emisor_id' | 'contenido'>;
+        Update: Partial<MensajesRow>;
         Relationships: [];
       };
     };

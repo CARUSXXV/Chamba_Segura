@@ -7,7 +7,6 @@ import {
   Param,
   UseGuards,
   Request,
-  Query,
 } from '@nestjs/common';
 import type { Request as ExpressRequest } from 'express';
 import type { User } from '@supabase/supabase-js';
@@ -25,9 +24,7 @@ interface RequestWithUser extends ExpressRequest {
 @Controller('postulaciones')
 @UseGuards(AuthGuard)
 export class PostulacionesController {
-  constructor(
-    private readonly postulacionesService: PostulacionesService,
-  ) {}
+  constructor(private readonly postulacionesService: PostulacionesService) {}
 
   @Post()
   async create(
@@ -55,10 +52,6 @@ export class PostulacionesController {
     @Body('nuevo_estado') nuevoEstado: EstadoPostulacion,
     @Request() req: RequestWithUser,
   ) {
-    return this.postulacionesService.updateEstado(
-      id,
-      nuevoEstado,
-      req.user.id,
-    );
+    return this.postulacionesService.updateEstado(id, nuevoEstado, req.user.id);
   }
 }

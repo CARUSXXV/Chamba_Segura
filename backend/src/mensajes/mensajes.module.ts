@@ -8,5 +8,6 @@ import { SupabaseModule } from '../supabase/supabase.module';
   imports: [SupabaseModule],
   controllers: [MensajesController],
   providers: [MensajesService, MensajesGateway],
+  exports: [MensajesService],
 })
 export class MensajesModule {}

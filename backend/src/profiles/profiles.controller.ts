@@ -24,10 +24,7 @@ export class ProfilesController {
   // Ruta para actualizar: PUT /api/v1/perfiles/:id
   @UseGuards(AuthGuard)
   @Put(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() payload: ProfileUpdatePayload,
-  ) {
+  async update(@Param('id') id: string, @Body() payload: ProfileUpdatePayload) {
     return this.profilesService.updateProfile(id, payload);
   }
 

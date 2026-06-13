@@ -59,7 +59,7 @@ export default function DetalleTrabajoPage() {
         loadJob();
       }
     }
-  }, [authLoading, session, id, router]);
+  }, [authLoading, session, id, router, user]);
 
   const handleDelete = async () => {
     if (!session?.access_token || !id) return;

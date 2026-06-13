@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Database, ServiciosRow } from '../supabase/database.types';
+import type { Database } from '../supabase/database.types';
+import { ChatsService } from '../chats/chats.service';
 
 export type EstadoPostulacion = 'pendiente' | 'aceptado' | 'rechazado';
 
@@ -27,7 +28,10 @@ export interface PostulacionPayload {
 
 @Injectable()
 export class PostulacionesService {
-  constructor(private readonly supabase: SupabaseClient<Database>) { }
+  constructor(
+    private readonly supabase: SupabaseClient<Database>,
+    private readonly chatsService: ChatsService,
+  ) {}
 
   async create(payload: PostulacionPayload, trabajadorId: string) {
     const { data: rawTrabajo, error: trabajoError } = await this.supabase
@@ -76,9 +80,7 @@ export class PostulacionesService {
   async findByJobId(jobId: string) {
     const { data, error } = await this.supabase
       .from('postulaciones')
-      .select(
-        '*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
-      )
+      .select('*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url)')
       .eq('job_id', jobId)
       .order('created_at', { ascending: false });
 
@@ -156,13 +158,18 @@ export class PostulacionesService {
       const trabajoId = postulacion.job_id;
       const { data: trabajoDatos } = await this.supabase
         .from('jobs')
-        .select('budget')
+        .select('budget, title')
         .eq('id', trabajoId)
         .single();
 
-      const precioFinal = (trabajoDatos as unknown as { budget?: number })?.budget ?? 0;
+      const trabajo = trabajoDatos as unknown as {
+        budget?: number;
+        title?: string;
+      };
+      const precioFinal = trabajo?.budget ?? 0;
+      const tituloTrabajo = trabajo?.title ?? 'Servicio General';
 
-      let { data: servicios } = await this.supabase
+      const { data: servicios } = await this.supabase
         .from('servicios')
         .select('id')
         .eq('trabajador_id', postulacion.trabajador_id)
@@ -173,20 +180,22 @@ export class PostulacionesService {
       if (servicios && servicios.length > 0) {
         serviciosId = (servicios[0] as unknown as { id: string }).id;
       } else {
-        const { data: newServicio } = await this.supabase
-          .from('servicios')
-          .insert({
-            id: crypto.randomUUID(),
-            trabajador_id: postulacion.trabajador_id,
-            oficio: 'Servicio General',
-            descripcion: 'Servicio creado automáticamente desde postulación',
-            tarifa_promedio: precioFinal,
-          } as never)
-          .select('id')
-          .single();
+          const { data: newServicio } = await this.supabase
+            .from('servicios')
+            .insert({
+              id: crypto.randomUUID(),
+              trabajador_id: postulacion.trabajador_id,
+              oficio: tituloTrabajo,
+              descripcion: tituloTrabajo,
+              tarifa_promedio: precioFinal,
+            } as never)
+            .select('id')
+            .single();
 
         if (!newServicio)
-          throw new InternalServerErrorException('Error al crear servicio automático');
+          throw new InternalServerErrorException(
+            'Error al crear servicio automático',
+          );
         serviciosId = (newServicio as unknown as { id: string }).id;
       }
 
@@ -196,6 +205,7 @@ export class PostulacionesService {
           id: crypto.randomUUID(),
           cliente_id: userId,
           servicios_id: serviciosId,
+          job_id: trabajoId,
           estado_contrato: 'aceptado',
           fecha_calendario: new Date().toISOString(),
           precio_final: precioFinal,
@@ -205,6 +215,12 @@ export class PostulacionesService {
         throw new InternalServerErrorException(
           `Error al crear contratación: ${contratacionError.message}`,
         );
+
+      await this.chatsService.createChat(
+        userId,
+        postulacion.trabajador_id,
+        postulacion.job_id,
+      );
     }
 
     const { data, error } = await this.supabase

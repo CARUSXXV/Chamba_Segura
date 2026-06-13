@@ -6,19 +6,15 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { JobsModule } from './jobs/jobs.module';
 import { ChatsModule } from './chats/chats.module';
-import { MensajesModule } from './mensajes/mensajes.module'
+import { MensajesModule } from './mensajes/mensajes.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SupabaseModule } from './supabase/supabase.module';
 import { ServiciosModule } from './servicios/servicios.module';
 import { ContratacionesModule } from './contrataciones/contrataciones.module';
 import { PostulacionesModule } from './postulaciones/postulaciones.module';
-import { ScheduleModule } from '@nestjs/schedule';
-
-
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     SupabaseModule,
@@ -29,7 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ProfilesModule,
     ServiciosModule,
     ContratacionesModule,
-    PostulacionesModule
+    PostulacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -24,5 +24,4 @@ export class AuthController {
       body.es_trabajador,
     );
   }
-
 }

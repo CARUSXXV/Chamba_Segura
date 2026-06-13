@@ -23,7 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateSessionCookie = (session: Session | null) => {
     if (session) {
-      document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax; Secure`;
+      const secure = location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `sb-access-token=${session.access_token}; path=/; SameSite=Lax${secure}`;
     } else {
       document.cookie = 'sb-access-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     }
@@ -33,45 +34,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(user);
     setSession(session);
     updateSessionCookie(session);
-    // Also need to set the session in the supabase client so subsequent calls are authenticated
-    // guardar sesión en el cliente; algunos flujos desde el backend
-    // pueden no incluir `refresh_token`. Evitar que esto lance errores
-    // y ensucie la consola. Sólo intentar si existe o manejar el fallo.
-    (async () => {
-      try {
-        // preferimos evitar llamar si no hay refresh_token
-        type MaybeSessionWithRefresh = Session & { refresh_token?: string };
-        const sess = session as MaybeSessionWithRefresh | null;
-        if (sess?.refresh_token) {
-          await supabase.auth.setSession(sess);
-        }
-      } catch (err) {
-        // No interrumpir el flujo de la UI por errores de refresh token
-        // Logueamos en consola para diagnóstico pero silencioso para usuarios
-        console.warn('No se pudo establecer la sesión en el cliente Supabase:', err);
-      }
-    })();
   };
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      updateSessionCookie(session);
-      setIsLoading(false);
-    });
+    const init = async () => {
+      const { data: { session: storedSession } } = await supabase.auth.getSession();
 
-    // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (storedSession) {
+        const { data: { session: refreshed } } = await supabase.auth.refreshSession();
+        if (refreshed) {
+          setSession(refreshed);
+          setUser(refreshed.user);
+          updateSessionCookie(refreshed);
+        } else {
+          setSession(storedSession);
+          setUser(storedSession.user);
+          updateSessionCookie(storedSession);
+        }
+      }
+      setIsLoading(false);
+    };
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
+
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        setUser(null);
+        setIsLoading(false);
+        updateSessionCookie(null);
+        router.push('/auth/login');
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
       updateSessionCookie(session);
-      
-      if (_event === 'SIGNED_OUT') {
-        router.push('/auth/login');
-      }
     });
 
     return () => {

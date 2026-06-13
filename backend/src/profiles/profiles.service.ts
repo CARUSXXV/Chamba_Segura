@@ -52,7 +52,7 @@ export class ProfilesService {
       };
 
       return profileFromAuth;
-    } catch (_error) {
+    } catch {
       throw new NotFoundException('Perfil no encontrado');
     }
   }

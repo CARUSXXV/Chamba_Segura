@@ -92,7 +92,7 @@ export class ContratacionesService {
       const { data, error } = await this.client
         .from('contrataciones')
         .select(
-          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo)',
+          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
         )
         .in('servicios_id', servicioIds);
 
@@ -104,7 +104,7 @@ export class ContratacionesService {
     const { data, error } = await this.client
       .from('contrataciones')
       .select(
-        '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo)',
+        '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
       )
       .eq('cliente_id', userId);
 
@@ -156,7 +156,9 @@ export class ContratacionesService {
           contratacion.estado_contrato === EstadoContratacion.EN_PROGRESO
         ) {
           // Notify worker (TODO: replace with real notification system)
-          console.log(`[NOTIFICACIÓN] El cliente ${userId} canceló la contratación ${id} (estado: ${contratacion.estado_contrato}). Notificando al trabajador ${contratacion.servicio?.trabajador_id}.`);
+          console.log(
+            `[NOTIFICACIÓN] El cliente ${userId} canceló la contratación ${id} (estado: ${contratacion.estado_contrato}). Notificando al trabajador ${contratacion.servicio?.trabajador_id}.`,
+          );
         }
       } else if (nuevoEstado === EstadoContratacion.COMPLETADO) {
         if (contratacion.estado_contrato !== EstadoContratacion.EN_PROGRESO) {

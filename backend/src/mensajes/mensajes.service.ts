@@ -1,68 +1,104 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
-
-
 @Injectable()
 export class MensajesService {
-  constructor(private readonly supabase: SupabaseService) { }
+  constructor(private readonly supabase: SupabaseService) {}
 
-  // Obtener el historial completo de un chat específico
+  private get client() {
+    return this.supabase.getClient();
+  }
+
   async getMessagesByChat(chatId: string) {
-    const { data, error } = await this.supabase.getClient()
+    const { data, error } = await this.client
       .from('mensajes')
-      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
+      .select(
+        '*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)',
+      )
       .eq('chat_id', chatId)
-      .order('enviado_el', { ascending: true }); // Orden cronológico para el chat
+      .order('enviado_el', { ascending: true });
 
     if (error) {
-      console.error(error);
-      throw new InternalServerErrorException(error.message || 'Error cargando el historial de mensajes');
+      throw new InternalServerErrorException(
+        error.message || 'Error cargando el historial de mensajes',
+      );
     }
     return data;
   }
 
-  // Guardar un mensaje en la base de datos (Llamado por el WebSocket)
-  async saveMessage(payload: { chat_id: string; emisor_id: string; contenido: string }) {
-    const { data, error } = await this.supabase.getClient()
+  async saveMessage(payload: {
+    chat_id: string;
+    emisor_id: string;
+    contenido: string;
+  }) {
+    const { data, error } = await this.client
       .from('mensajes')
-      .insert([{
+      .insert({
         id: crypto.randomUUID(),
-        ...payload
-      }] as any)
-      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
+        chat_id: payload.chat_id,
+        emisor_id: payload.emisor_id,
+        contenido: payload.contenido,
+      } as never)
+      .select(
+        '*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)',
+      )
       .single();
 
     if (error) {
-      console.error(error);
-      throw new InternalServerErrorException(error.message || 'Error guardando el mensaje');
+      throw new InternalServerErrorException(
+        error.message || 'Error guardando el mensaje',
+      );
     }
     return data;
   }
 
   async editMessage(id: string, emisor_id: string, nuevo_contenido: string) {
-    const { data, error } = await this.supabase.getClient()
+    const { data, error } = await this.client
       .from('mensajes')
-      // Actualizamos el contenido y podríamos tener un campo booleano 'editado'
       .update({ contenido: nuevo_contenido } as never)
       .eq('id', id)
-      .eq('emisor_id', emisor_id) // Seguridad: Solo el dueño puede editarlo
-      .select('*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)')
+      .eq('emisor_id', emisor_id)
+      .select(
+        '*, emisor:perfiles!mensajes_emisor_id_fkey(nombre_completo, username)',
+      )
       .single();
 
-    if (error) throw new InternalServerErrorException(`Error editando mensaje: ${error.message}`);
+    if (error)
+      throw new InternalServerErrorException(
+        `Error editando mensaje: ${error.message}`,
+      );
     return data;
   }
 
-  // Eliminar un mensaje
   async deleteMessage(id: string, emisor_id: string) {
-    const { error } = await this.supabase.getClient()
+    const { error } = await this.client
       .from('mensajes')
       .delete()
       .eq('id', id)
-      .eq('emisor_id', emisor_id); // Seguridad: Solo el dueño puede borrarlo
+      .eq('emisor_id', emisor_id);
 
-    if (error) throw new InternalServerErrorException(`Error eliminando mensaje: ${error.message}`);
-    return { id }; // Devolvemos el ID para que el frontend sepa cuál quitar de la pantalla
+    if (error)
+      throw new InternalServerErrorException(
+        `Error eliminando mensaje: ${error.message}`,
+      );
+    return { id };
+  }
+
+  async isUserChatParticipant(
+    userId: string,
+    chatId: string,
+  ): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('chats')
+      .select('id')
+      .eq('id', chatId)
+      .or(`cliente_id.eq.${userId},trabajador_id.eq.${userId}`)
+      .maybeSingle();
+
+    if (error)
+      throw new InternalServerErrorException(
+        `Error verificando acceso al chat: ${error.message}`,
+      );
+    return !!data;
   }
 }
