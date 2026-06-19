@@ -92,28 +92,63 @@ export class PostulacionesService {
     return data ?? [];
   }
 
-  async findByUser(userId: string, esTrabajador: boolean) {
-    let query = this.supabase
+  async findByUser(userId: string) {
+    // 1. Postulaciones enviadas (como trabajador)
+    const { data: enviadas, error: errorEnviadas } = await this.supabase
       .from('postulaciones')
       .select(
         '*, trabajo:jobs(*, perfiles!contractor_id(nombre_completo, foto_url)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
       )
+      .eq('trabajador_id', userId)
       .order('created_at', { ascending: false });
 
-    if (esTrabajador) {
-      query = query.eq('trabajador_id', userId);
-    } else {
-      query = query.eq('trabajo.contractor_id', userId);
+    if (errorEnviadas) {
+      throw new InternalServerErrorException(
+        `Error al obtener postulaciones enviadas: ${errorEnviadas.message}`,
+      );
     }
 
-    const { data, error } = await query;
+    // 2. Postulaciones recibidas en los trabajos creados por el usuario (como cliente)
+    const { data: misTrabajos, error: errorTrabajos } = await this.supabase
+      .from('jobs')
+      .select('id')
+      .eq('contractor_id', userId);
 
-    if (error)
+    if (errorTrabajos) {
       throw new InternalServerErrorException(
-        `Error al obtener postulaciones: ${error.message}`,
+        `Error al obtener trabajos creados: ${errorTrabajos.message}`,
       );
+    }
 
-    return data ?? [];
+    const trabajoIds = ((misTrabajos || []) as { id: string }[]).map((j) => j.id);
+
+    let recibidas: any[] = [];
+    if (trabajoIds.length > 0) {
+      const { data: dataRecibidas, error: errorRecibidas } = await this.supabase
+        .from('postulaciones')
+        .select(
+          '*, trabajo:jobs(*, perfiles!contractor_id(nombre_completo, foto_url)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
+        )
+        .in('job_id', trabajoIds)
+        .order('created_at', { ascending: false });
+
+      if (errorRecibidas) {
+        throw new InternalServerErrorException(
+          `Error al obtener postulaciones recibidas: ${errorRecibidas.message}`,
+        );
+      }
+      recibidas = dataRecibidas || [];
+    }
+
+    // Combinar y ordenar por fecha de creación desc
+    const combinadas = [...(enviadas || []), ...recibidas];
+    combinadas.sort(
+      (a, b) =>
+        new Date(b.created_at || 0).getTime() -
+        new Date(a.created_at || 0).getTime(),
+    );
+
+    return combinadas;
   }
 
   async updateEstado(

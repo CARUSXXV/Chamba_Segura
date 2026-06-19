@@ -48,7 +48,6 @@ export class ProfilesService {
         email: user.email || null,
         contractor_id: (metadata?.contractor_id as string | null) || null,
         creado_el: user.created_at || null,
-        es_trabajador: (metadata?.es_trabajador as boolean) ?? false,
       };
 
       return profileFromAuth;

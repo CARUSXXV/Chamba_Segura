@@ -130,7 +130,6 @@ export default function DetalleTrabajoPage() {
   }
 
   const isOwner = user?.id === job.contractor_id;
-  const isTrabajador = user?.user_metadata?.es_trabajador;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
@@ -214,14 +213,14 @@ export default function DetalleTrabajoPage() {
                     {isDeleting ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </>
-              ) : isTrabajador ? (
+              ) : (
                 <button
                   className="w-full flex justify-center items-center py-4 px-6 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg"
                   onClick={() => setShowPostularModal(true)}
                 >
                   Postularme a este trabajo
                 </button>
-              ) : null}
+              )}
             </div>
           </div>
         </div>

@@ -14,7 +14,6 @@ export class AuthService {
     password: string,
     username: string,
     nombre_completo: string,
-    es_trabajador: boolean,
   ) {
     const supabase = this.supabaseService.getClient();
 
@@ -27,7 +26,6 @@ export class AuthService {
         user_metadata: {
           username,
           nombre_completo,
-          es_trabajador,
         },
       });
 
@@ -43,7 +41,6 @@ export class AuthService {
         id: userId,
         username,
         nombre_completo,
-        es_trabajador,
       } as unknown as never,
     ]);
 

@@ -7,7 +7,6 @@ export interface ProfilesRow {
   foto_url?: string | null;
   contractor_id?: string | null;
   creado_el?: string | null;
-  es_trabajador?: boolean | null;
 }
 
 export interface ServiciosRow {

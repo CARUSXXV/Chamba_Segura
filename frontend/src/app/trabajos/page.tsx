@@ -84,8 +84,6 @@ export default function TrabajosPage() {
     }));
   };
 
-  const isTrabajador = user?.user_metadata?.es_trabajador;
-
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -120,21 +118,20 @@ export default function TrabajosPage() {
             <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Trabajos Disponibles</h1>
             <p className="text-gray-500">Explora oportunidades o publica una nueva necesidad.</p>
           </div>
-          {isTrabajador ? (
+          <div className="flex flex-wrap gap-3">
             <Link
               href="/servicios/nuevo"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all shadow-sm"
             >
-              Publicar Servicio
+              Ofrecer un Servicio
             </Link>
-          ) : (
             <Link 
               href="/trabajos/nuevo"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"
             >
               Publicar Trabajo
             </Link>
-          )}
+          </div>
         </div>
 
         {/* Filtros */}
@@ -209,14 +206,12 @@ export default function TrabajosPage() {
             </div>
             <h2 className="text-lg font-bold text-gray-900 mb-2">No hay trabajos publicados aún</h2>
             <p className="text-gray-400 text-sm max-w-sm mx-auto mb-6">Prueba ajustando tus filtros o publica un nuevo requerimiento.</p>
-            {!isTrabajador && (
-              <Link 
-                href="/trabajos/nuevo"
-                className="inline-flex items-center font-semibold text-blue-600 hover:text-blue-700"
-              >
-                Publica el primer trabajo &rarr;
-              </Link>
-            )}
+            <Link 
+              href="/trabajos/nuevo"
+              className="inline-flex items-center font-semibold text-blue-600 hover:text-blue-700"
+            >
+              Publica el primer trabajo &rarr;
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -29,8 +29,6 @@ export default function DashboardContratacionesPage() {
     "pendientes",
   );
 
-  const isTrabajador = user?.user_metadata?.es_trabajador === true;
-
   const loadData = useCallback(async () => {
     const accessToken = session?.access_token;
     if (!accessToken) return;
@@ -230,13 +228,11 @@ export default function DashboardContratacionesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700">
-                        {isTrabajador ? "Postulación enviada" : "Solicitud pendiente"}
+                        {p.trabajador_id === user?.id ? "Postulación enviada" : "Solicitud pendiente"}
                       </span>
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {isTrabajador
-                        ? p.trabajo?.title || "Trabajo solicitado"
-                        : p.trabajo?.title || "Solicitud de trabajo"}
+                      {p.trabajo?.title || "Trabajo"}
                     </h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <p>📅 {new Date(p.created_at).toLocaleDateString()}</p>
@@ -246,17 +242,17 @@ export default function DashboardContratacionesPage() {
                     </div>
                     <div className="mt-4 flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
-                        {isTrabajador
+                        {p.trabajador_id === user?.id
                           ? p.trabajo?.perfiles?.nombre_completo?.charAt(0)
                           : p.trabajador?.nombre_completo?.charAt(0)}
                       </div>
                       <p className="text-xs font-semibold text-gray-700">
-                        {isTrabajador
+                        {p.trabajador_id === user?.id
                           ? `Contratante: ${p.trabajo?.perfiles?.nombre_completo || "Desconocido"}`
                           : `Trabajador: ${p.trabajador?.nombre_completo || "Desconocido"}`}
                       </p>
                     </div>
-                    {!isTrabajador && p.mensaje && (
+                    {p.trabajador_id !== user?.id && p.mensaje && (
                       <p className="mt-2 text-sm text-gray-500 italic line-clamp-2">
                         "{p.mensaje}"
                       </p>
@@ -264,7 +260,7 @@ export default function DashboardContratacionesPage() {
                   </div>
 
                   <div className="flex flex-col gap-2 min-w-37.5">
-                    {!isTrabajador && (
+                    {p.trabajador_id !== user?.id ? (
                       <>
                         <button
                           onClick={async () => {
@@ -297,8 +293,7 @@ export default function DashboardContratacionesPage() {
                           Rechazar
                         </button>
                       </>
-                    )}
-                    {isTrabajador && (
+                    ) : (
                       <div className="text-xs text-gray-400 text-center py-2">
                         Esperando respuesta del contratante
                       </div>
@@ -366,21 +361,21 @@ export default function DashboardContratacionesPage() {
                     )}
                     <div className="mt-4 flex items-center gap-2">
                       <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
-                        {isTrabajador
-                          ? c.cliente?.nombre_completo?.charAt(0)
-                          : c.servicio?.trabajador?.nombre_completo?.charAt(0)}
+                        {c.cliente_id === user?.id
+                          ? c.servicio?.trabajador?.nombre_completo?.charAt(0)
+                          : c.cliente?.nombre_completo?.charAt(0)}
                       </div>
                       <p className="text-xs font-semibold text-gray-700">
-                        {isTrabajador
-                          ? `Cliente: ${c.cliente?.nombre_completo}`
-                          : `Trabajador: ${c.servicio?.trabajador?.nombre_completo}`}
+                        {c.cliente_id === user?.id
+                          ? `Trabajador: ${c.servicio?.trabajador?.nombre_completo}`
+                          : `Cliente: ${c.cliente?.nombre_completo}`}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-2 min-w-37.5">
-                    {/* Acciones de Trabajador */}
-                    {isTrabajador &&
+                    {/* Acciones como trabajador de la contratación */}
+                    {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato ===
                       EstadoContratacion.SOLICITUD_PENDIENTE && (
                         <>
@@ -408,7 +403,7 @@ export default function DashboardContratacionesPage() {
                           </button>
                         </>
                       )}
-                    {isTrabajador &&
+                    {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.ACEPTADO && (
                         <button
                           onClick={() =>
@@ -422,7 +417,7 @@ export default function DashboardContratacionesPage() {
                           Iniciar Trabajo
                         </button>
                       )}
-                    {isTrabajador &&
+                    {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO && (
                         <button
                           onClick={() =>
@@ -437,7 +432,7 @@ export default function DashboardContratacionesPage() {
                         </button>
                       )}
 
-                    {/* Chat para ambos roles en estados activos o pendientes */}
+                    {/* Chat para cualquier participante en estados activos o pendientes */}
                     {(c.estado_contrato === EstadoContratacion.SOLICITUD_PENDIENTE ||
                       c.estado_contrato === EstadoContratacion.ACEPTADO ||
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO) && (
@@ -449,8 +444,8 @@ export default function DashboardContratacionesPage() {
                         </button>
                       )}
 
-                    {/* Acciones de Cliente */}
-                    {!isTrabajador &&
+                    {/* Acciones como cliente de la contratación */}
+                    {c.cliente_id === user?.id &&
                       c.estado_contrato ===
                       EstadoContratacion.PENDIENTE_FIRMA && (
                         <button
@@ -460,7 +455,7 @@ export default function DashboardContratacionesPage() {
                           Firmar Contrato (Simular)
                         </button>
                       )}
-                    {!isTrabajador &&
+                    {c.cliente_id === user?.id &&
                       (c.estado_contrato === EstadoContratacion.SOLICITUD_PENDIENTE ||
                         c.estado_contrato === EstadoContratacion.PENDIENTE_FIRMA ||
                         c.estado_contrato === EstadoContratacion.ACEPTADO ||
@@ -478,7 +473,7 @@ export default function DashboardContratacionesPage() {
                           Cancelar Trabajo
                         </button>
                       )}
-                    {!isTrabajador &&
+                    {c.cliente_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO && (
                         <button
                           onClick={() =>

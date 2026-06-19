@@ -49,24 +49,25 @@ ChambaSegura resuelve estos problemas proporcionando:
 ## ⚙️ Funcionalidades Principales
 
 ### Gestión de Usuarios y Autenticación
-- Registro de usuarios con selección de rol (Cliente / Trabajador).
+- Registro de usuarios sin roles: todos los usuarios pueden publicar trabajos, postularse y ofrecer servicios.
 - Inicio de sesión seguro mediante Supabase Auth con JWT.
 - Perfiles de usuario editables con foto, datos de contacto y especialidad.
 - Middleware de protección de rutas privadas.
 
 ### Marketplace de Trabajos (Jobs)
-- **Clientes**: Publican trabajos especificando título, descripción, categoría, presupuesto y habilidades requeridas.
-- **Trabajadores**: Visualizan trabajos disponibles, filtran por categoría y habilidades.
+- **Cualquier usuario** puede publicar trabajos especificando título, descripción, categoría, presupuesto y habilidades requeridas.
+- Visualización de trabajos disponibles con filtros por categoría y habilidades.
 - Búsqueda y filtrado avanzado por categoría y habilidades técnicas.
 
 ### Catálogo de Servicios (Servicios)
-- **Trabajadores**: Publican servicios con oficio, tarifa promedio, descripción y opción de firma de contrato.
-- **Clientes**: Exploran servicios disponibles y contactan directamente a los técnicos.
+- **Cualquier usuario** puede publicar servicios con oficio, tarifa promedio, descripción y opción de firma de contrato.
+- Exploración de servicios disponibles para contactar directamente a los técnicos.
 
 ### Sistema de Postulaciones
-- Los trabajadores se postulan a trabajos publicados por clientes.
-- Los clientes revisan postulaciones y aceptan/rechazan candidatos.
-- Al aceptar una postulación, se genera automáticamente un servicio para el trabajador y una contratación.
+- **Cualquier usuario** puede postularse a trabajos publicados por otros.
+- El dueño del trabajo revisa las postulaciones recibidas y acepta/rechaza candidatos.
+- El postulante ve el estado de sus postulaciones enviadas.
+- Al aceptar una postulación, se genera automáticamente un servicio y una contratación.
 
 ### Motor de Contrataciones con Máquina de Estados
 Las contrataciones siguen un flujo de estado riguroso:
@@ -93,11 +94,13 @@ PENDIENTE_FIRMA ──> SOLICITUD_PENDIENTE ──> ACEPTADO ──> EN_PROGRESO
 ### Panel de Control (Dashboard)
 - Vista general con saludo personalizado según la hora del día.
 - Estadísticas del usuario (con placeholders para datos reales).
-- Accesos directos contextuales según el rol.
+- Accesos directos a trabajos, servicios, contrataciones y perfil.
 - Pestañas para organizar contrataciones por estado.
 
-### Mensajería (Próximamente)
-- Módulo de mensajería en desarrollo para comunicación interna entre clientes y trabajadores.
+### Mensajería en Tiempo Real
+- Chat en tiempo real entre participantes de una contratación mediante WebSockets.
+- Historial de mensajes persistente por conversación.
+- Creación automática de chat al aceptar una postulación.
 
 ---
 
@@ -177,13 +180,13 @@ La aplicación frontend utiliza el **App Router** de Next.js 16 con layout anida
 
 El backend sigue la arquitectura de **módulos** de NestJS, cada uno con su propio controlador, servicio y responsabilidades claramente definidas:
 
-- **AuthModule**: Gestiona registro e inicio de sesión mediante Supabase Auth. El registro crea el usuario en Supabase Auth y simultáneamente inserta su perfil en la tabla `perfiles`, con rollback si algo falla.
+- **AuthModule**: Gestiona registro e inicio de sesión mediante Supabase Auth. El registro crea el usuario en Supabase Auth y simultáneamente inserta su perfil en la tabla `perfiles`, con rollback si algo falla. No existe distinción de roles: todos los usuarios tienen el mismo perfil unificado.
 - **SupabaseModule**: Módulo global que provee el cliente de Supabase configurado con la Service Role Key para operaciones administrativas.
 - **AuthGuard**: Guard personalizado que extrae el token JWT del header `Authorization`, lo valida contra Supabase y adjunta el objeto `user` al request.
 - **JobsModule**: CRUD completo de trabajos con filtros por categoría y habilidades (usando operador `@>` de PostgreSQL para arreglos).
 - **ServiciosModule**: CRUD de servicios con joins a la tabla de perfiles.
 - **PostulacionesModule**: Lógica de postulaciones con validaciones (no postularse al propio trabajo, no duplicados). Al aceptar una postulación, se rechazan automáticamente las demás y se genera una contratación.
-- **ContratacionesModule**: Máquina de estados completa con validación de permisos por rol (cliente vs trabajador).
+- **ContratacionesModule**: Máquina de estados completa con validación de permisos dinámica según la relación del usuario con cada contratación (cliente_id vs servicio.trabajador_id).
 - **ProfilesModule**: CRUD de perfiles con la capacidad de construir perfiles desde `user_metadata` de Supabase si no existen en la base de datos.
 
 ### Base de Datos: Supabase (PostgreSQL)
@@ -192,7 +195,7 @@ El esquema consta de 5 tablas principales:
 
 | Tabla | Propósito |
 |-------|-----------|
-| `perfiles` | Datos de usuario (nombre, username, email, teléfono, foto, rol) |
+| `perfiles` | Datos de usuario (nombre, username, email, teléfono, foto) |
 | `jobs` | Trabajos publicados por clientes |
 | `servicios` | Servicios ofrecidos por trabajadores |
 | `postulaciones` | Postulaciones de trabajadores a trabajos |
@@ -262,31 +265,35 @@ Supabase ofrece una solución integral que combina base de datos PostgreSQL con 
 ### ¿Por qué Tailwind CSS v4?
 Tailwind CSS permite un desarrollo rápido de UI con un sistema de diseño consistente, sin necesidad de escribir CSS personalizado. La versión 4 introduce mejoras significativas en rendimiento y sintaxis.
 
-### Roles de Usuario
-El sistema maneja dos roles mediante un flag booleano `es_trabajador` en los metadatos del usuario:
-- **`es_trabajador: true`**: Puede publicar servicios y postularse a trabajos.
-- **`es_trabajador: false`** (Cliente): Puede publicar trabajos y contratar servicios.
+### Perfil Unificado (Sin Roles)
+El sistema adoptó un **modelo de perfil unificado**, eliminando la división rígida entre Cliente y Trabajador. Todos los usuarios autenticados pueden:
+- Publicar trabajos y postularse a trabajos de otros.
+- Publicar servicios y contratar servicios de otros.
+- Gestionar postulaciones recibidas y enviadas desde un mismo panel.
+- Participar en contrataciones como cliente o como trabajador según cada relación.
+
+> Este cambio se documenta en detalle en [`CHANGELOG_PERFIL_UNIFICADO.md`](./CHANGELOG_PERFIL_UNIFICADO.md).
 
 ---
 
 ## 🔮 Alcance y Trabajo Futuro
 
 ### Funcionalidades Implementadas
-- [x] Autenticación y registro con roles
+- [x] Autenticación y registro con perfil unificado (sin roles)
 - [x] Publicación y búsqueda de trabajos
 - [x] Publicación y exploración de servicios
 - [x] Sistema de postulaciones
 - [x] Motor de contrataciones con máquina de estados
 - [x] Gestión de contratos digitales
 - [x] Perfiles de usuario editables
-- [x] Panel de control personalizado
+- [x] Panel de control unificado (sin distinción de roles)
 - [x] Landing page profesional con marketing
 - [x] Dashboard de contrataciones con tabs por estado
 - [x] Protección de rutas con middleware
 - [x] Diseño responsivo (Tailwind CSS)
 
 ### Funcionalidades Planeadas / En Desarrollo
-- [ ] Módulo de mensajería interna (tiempo real)
+- [x] Módulo de mensajería interna (tiempo real con WebSockets)
 - [ ] Integración de pagos reales (Pasarela de pago)
 - [ ] Sistema de calificaciones y reseñas
 - [ ] Notificaciones en tiempo real (WebSockets)

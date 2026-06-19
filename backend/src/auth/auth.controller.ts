@@ -13,7 +13,6 @@ export class AuthController {
       password: string;
       username: string;
       nombre_completo: string;
-      es_trabajador: boolean;
     },
   ) {
     return this.authService.register(
@@ -21,7 +20,6 @@ export class AuthController {
       body.password,
       body.username,
       body.nombre_completo,
-      body.es_trabajador,
     );
   }
 }

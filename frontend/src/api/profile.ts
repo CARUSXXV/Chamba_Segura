@@ -8,7 +8,6 @@ export interface Profile {
   email: string;
   contractor_id: string;
   creado_el: string;
-  es_trabajador: boolean;
 }
 
 export interface profilePayload {

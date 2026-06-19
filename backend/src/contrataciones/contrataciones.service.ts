@@ -33,7 +33,7 @@ export class ContratacionesService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly serviciosService: ServiciosService,
-  ) {}
+  ) { }
 
   private get client() {
     return this.supabaseService.getClient();
@@ -71,52 +71,56 @@ export class ContratacionesService {
 
   async findByUserId(
     userId: string,
-    isTrabajador: boolean,
   ): Promise<ContratacionesWithRelations[]> {
-    if (isTrabajador) {
-      // Step 1: Get all servicio IDs belonging to this worker
-      const { data: workerServicios, error: svcError } = await this.client
-        .from('servicios')
-        .select('id')
-        .eq('trabajador_id', userId);
-
-      if (svcError) throw new InternalServerErrorException(svcError.message);
-
-      const servicioIds = (workerServicios ?? []).map(
-        (s: { id: string }) => s.id,
-      );
-
-      if (servicioIds.length === 0) return [];
-
-      // Step 2: Fetch contrataciones for those servicios
-      const { data, error } = await this.client
-        .from('contrataciones')
-        .select(
-          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
-        )
-        .in('servicios_id', servicioIds);
-
-      if (error) throw new InternalServerErrorException(error.message);
-      return (data ?? []) as unknown as ContratacionesWithRelations[];
-    }
-
-    // For clients
-    const { data, error } = await this.client
+    // 1. Fetch as client (contrataciones where cliente_id = userId)
+    const { data: clientContracts, error: clientErr } = await this.client
       .from('contrataciones')
       .select(
         '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
       )
       .eq('cliente_id', userId);
 
-    if (error) throw new InternalServerErrorException(error.message);
-    return (data ?? []) as unknown as ContratacionesWithRelations[];
+    if (clientErr) throw new InternalServerErrorException(clientErr.message);
+
+    // 2. Fetch as worker (servicios created by user)
+    const { data: workerServicios, error: svcError } = await this.client
+      .from('servicios')
+      .select('id')
+      .eq('trabajador_id', userId);
+
+    if (svcError) throw new InternalServerErrorException(svcError.message);
+
+    const servicioIds = (workerServicios ?? []).map(
+      (s: { id: string }) => s.id,
+    );
+
+    let workerContracts: ContratacionesWithRelations[] = [];
+    if (servicioIds.length > 0) {
+      const { data: wContracts, error: wErr } = await this.client
+        .from('contrataciones')
+        .select(
+          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
+        )
+        .in('servicios_id', servicioIds);
+
+      if (wErr) throw new InternalServerErrorException(wErr.message);
+      workerContracts = wContracts ?? [];
+    }
+
+    // Combine them and sort by date descending
+    const combined = [...(clientContracts ?? []), ...workerContracts];
+    combined.sort(
+      (a, b) =>
+        new Date(b.fecha_calendario || 0).getTime() -
+        new Date(a.fecha_calendario || 0).getTime(),
+    );
+    return combined as unknown as ContratacionesWithRelations[];
   }
 
   async updateEstado(
     id: string,
     nuevoEstado: EstadoContratacion,
     userId: string,
-    isTrabajador: boolean,
   ): Promise<ContratacionesWithRelations | null> {
     const { data: raw, error: fetchError } = await this.client
       .from('contrataciones')
@@ -129,12 +133,17 @@ export class ContratacionesService {
 
     const contratacion = raw as unknown as ContratacionesWithRelations;
 
-    if (isTrabajador) {
-      if (contratacion.servicio?.trabajador_id !== userId)
-        throw new ForbiddenException(
-          'No tienes permiso para gestionar esta contratación',
-        );
+    // Determinar dinámicamente si el usuario actual es el trabajador de este servicio
+    const isWorker = contratacion.servicio?.trabajador_id === userId;
+    const isClient = contratacion.cliente_id === userId;
 
+    if (!isWorker && !isClient) {
+      throw new ForbiddenException(
+        'No tienes permiso para gestionar esta contratación',
+      );
+    }
+
+    if (isWorker) {
       const allowedWorkerStates = [
         EstadoContratacion.ACEPTADO,
         EstadoContratacion.EN_PROGRESO,
@@ -145,11 +154,6 @@ export class ContratacionesService {
         throw new BadRequestException('Estado no permitido para trabajador');
       }
     } else {
-      if (contratacion.cliente_id !== userId)
-        throw new ForbiddenException(
-          'No tienes permiso para gestionar esta contratación',
-        );
-
       if (nuevoEstado === EstadoContratacion.CANCELADO) {
         if (
           contratacion.estado_contrato === EstadoContratacion.ACEPTADO ||

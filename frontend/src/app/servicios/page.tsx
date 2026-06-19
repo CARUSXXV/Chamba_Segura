@@ -43,8 +43,6 @@ export default function ServiciosPage() {
     };
   }, [authLoading, router, session]);
 
-  const esTrabajador = user?.user_metadata?.es_trabajador === true;
-
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -102,19 +100,15 @@ export default function ServiciosPage() {
               Servicios Disponibles
             </h1>
             <p className="text-gray-500">
-              {esTrabajador
-                ? "Ofrece tus servicios para que clientes te contraten."
-                : "Encuentra al profesional ideal para tu próximo proyecto y solicita sus servicios."}
+              Encuentra servicios profesionales u ofrece los tuyos.
             </p>
           </div>
-          {esTrabajador && (
-            <Link
-              href="/servicios/nuevo"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm shrink-0"
-            >
-              Publicar Servicio
-            </Link>
-          )}
+          <Link
+            href="/servicios/nuevo"
+            className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm shrink-0"
+          >
+            Publicar Servicio
+          </Link>
         </div>
 
         {loading ? (

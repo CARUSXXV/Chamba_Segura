@@ -15,45 +15,29 @@ export default function AppDashboard() {
 
   const name = user?.user_metadata?.nombre_completo || user?.user_metadata?.username || 'Usuario';
   const initial = (user?.user_metadata?.nombre_completo || user?.email || 'U').charAt(0).toUpperCase();
-  const esTrabajador = user?.user_metadata?.es_trabajador === true;
-
   const links = [
-    ...(esTrabajador
-      ? [{
-          href: '/trabajos',
-          title: 'Mis Trabajos',
-          desc: 'Busca trabajos y postúlate',
-          color: 'blue' as const,
-          icon: (
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          ),
-        }]
-      : [
-          {
-            href: '/trabajos',
-            title: 'Mis Trabajos',
-            desc: 'Tus trabajos publicados y postulaciones',
-            color: 'blue' as const,
-            icon: (
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            ),
-          },
-          {
-            href: '/servicios',
-            title: 'Buscar Servicios',
-            desc: 'Encuentra al profesional ideal',
-            color: 'sky' as const,
-            icon: (
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            ),
-          },
-        ]),
+    {
+      href: '/trabajos',
+      title: 'Mis Trabajos',
+      desc: 'Explora trabajos, postúlate y publica',
+      color: 'blue' as const,
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+    {
+      href: '/servicios',
+      title: 'Servicios',
+      desc: 'Busca y ofrece servicios profesionales',
+      color: 'sky' as const,
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      ),
+    },
     {
       href: '/mensajeria',
       title: 'Mensajería',
@@ -98,8 +82,8 @@ export default function AppDashboard() {
   };
 
   const stats = [
-    { label: esTrabajador ? 'Trabajos activos' : 'Trabajadores disponibles', value: '—', color: 'text-blue-600' },
-    { label: esTrabajador ? 'Servicios completados' : 'Trabajos publicados', value: '—', color: 'text-purple-600' },
+    { label: 'Trabajos disponibles', value: '—', color: 'text-blue-600' },
+    { label: 'Servicios activos', value: '—', color: 'text-purple-600' },
     { label: 'Mensajes nuevos', value: '—', color: 'text-emerald-600' },
   ];
 
@@ -143,17 +127,13 @@ export default function AppDashboard() {
                 {name}
               </h1>
               <div className="flex items-center gap-2 mt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  esTrabajador ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
-                }`}>
-                  {esTrabajador ? 'Trabajador' : 'Cliente'}
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
+                  Miembro
                 </span>
               </div>
             </div>
             <p className="text-gray-600 text-sm sm:text-base max-w-md leading-relaxed">
-              {esTrabajador
-                ? 'Ofrece tus servicios y consigue más clientes hoy.'
-                : 'Encuentra al profesional ideal para tu próximo proyecto.'}
+              Publica trabajos, ofrece servicios y conecta con profesionales.
             </p>
           </div>
         </div>
@@ -206,13 +186,13 @@ export default function AppDashboard() {
           </div>
           <div className="bg-gray-50 rounded-lg p-4 text-center">
             <p className="text-gray-400 text-sm">
-              Aún no tienes actividad. {esTrabajador ? 'Publica un servicio' : 'Explora los trabajos'} para empezar.
+              Aún no tienes actividad. Explora trabajos o servicios para empezar.
             </p>
             <Link
-              href={esTrabajador ? '/trabajos' : '/servicios'}
+              href="/trabajos"
               className="inline-flex items-center gap-1 mt-2 text-blue-600 text-sm font-semibold hover:text-blue-700 transition-colors"
             >
-              {esTrabajador ? 'Ir a mis trabajos' : 'Ver servicios disponibles'}
+              Ir a mis trabajos
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
               </svg>

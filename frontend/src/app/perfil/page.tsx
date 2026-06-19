@@ -106,11 +106,6 @@ export default function VerPerfilPage() {
               <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                user?.user_metadata?.es_trabajador ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
-              }`}>
-                {user?.user_metadata?.es_trabajador ? 'Trabajador' : 'Cliente'}
-              </span>
               <Link 
                 href="/perfil/editar"
                 className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-200"

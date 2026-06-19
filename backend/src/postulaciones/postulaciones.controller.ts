@@ -36,9 +36,7 @@ export class PostulacionesController {
 
   @Get()
   async findAll(@Request() req: RequestWithUser) {
-    const metadata = req.user.user_metadata as Record<string, unknown> | null;
-    const esTrabajador = metadata?.es_trabajador === true;
-    return this.postulacionesService.findByUser(req.user.id, esTrabajador);
+    return this.postulacionesService.findByUser(req.user.id);
   }
 
   @Get('trabajo/:trabajoId')

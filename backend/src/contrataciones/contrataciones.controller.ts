@@ -36,9 +36,7 @@ export class ContratacionesController {
 
   @Get()
   async findAll(@Request() req: RequestWithUser) {
-    const metadata = req.user.user_metadata as Record<string, unknown> | null;
-    const isTrabajador = metadata?.es_trabajador === true;
-    return this.contratacionesService.findByUserId(req.user.id, isTrabajador);
+    return this.contratacionesService.findByUserId(req.user.id);
   }
 
   @Patch(':id/estado')
@@ -47,13 +45,10 @@ export class ContratacionesController {
     @Body('nuevo_estado') nuevoEstado: EstadoContratacion,
     @Request() req: RequestWithUser,
   ) {
-    const metadata = req.user.user_metadata as Record<string, unknown> | null;
-    const isTrabajador = metadata?.es_trabajador === true;
     return this.contratacionesService.updateEstado(
       id,
       nuevoEstado,
       req.user.id,
-      isTrabajador,
     );
   }
 
