@@ -52,7 +52,7 @@ export class ResenasService {
         const { data, error } = await this.supabase.getClient()
             .from('resenas')
             // Ajusta las llaves foráneas si las llamaste distinto en Supabase
-            .select('*, evaluador:perfiles!resena_evaluador_id_fkey(nombre_completo, username, foto_url)')
+            .select('*, evaluador:perfiles!resena_evaluador_id_fkey(id, nombre_completo, username, foto_url)')
             .eq('evaluado_id', evaluado_id)
             .order('creado_el', { ascending: false });
 
@@ -63,7 +63,7 @@ export class ResenasService {
     // 3. Calcular el promedio de estrellas de un usuario (para mostrar al postularse)
     async obtenerPromedioUsuario(evaluado_id: string) {
         const { data, error } = await this.supabase.getClient()
-            .from('resena')
+            .from('resenas')
             .select('calificacion')
             .eq('evaluado_id', evaluado_id);
 

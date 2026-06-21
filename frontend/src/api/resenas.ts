@@ -24,6 +24,11 @@ export interface CreateResenaPayload {
   comentario?: string;
 }
 
+export interface PromedioUsuario {
+  promedio: number;
+  total_resenas: number;
+}
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const RESENAS_URL = `${API_BASE_URL}/resenas`;
 
@@ -67,9 +72,9 @@ export async function findByContratacionId(token: string, contratacionId: string
   if (!response.ok) throw new Error('Error al obtener reseña de la contratación');
   return response.json();
 }
-
-export async function getPromedioUsuario(token: string, usuarioId: string): Promise<{ promedio: number; total_resenas: number }> {
+export async function getPromedioUsuario(token: string, usuarioId: string): Promise<PromedioUsuario> {
   const response = await fetch(`${API_BASE_URL}/resenas/usuario/${usuarioId}/promedio`, {
+    method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
     },
