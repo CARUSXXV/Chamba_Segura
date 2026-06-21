@@ -76,7 +76,7 @@ export class ContratacionesService {
     const { data: clientContracts, error: clientErr } = await this.client
       .from('contrataciones')
       .select(
-        '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
+        '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description), resenas(*)',
       )
       .eq('cliente_id', userId);
 
@@ -99,7 +99,7 @@ export class ContratacionesService {
       const { data: wContracts, error: wErr } = await this.client
         .from('contrataciones')
         .select(
-          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description)',
+          '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description), resenas(*)',
         )
         .in('servicios_id', servicioIds);
 

@@ -31,7 +31,7 @@ export class PostulacionesService {
   constructor(
     private readonly supabase: SupabaseClient<Database>,
     private readonly chatsService: ChatsService,
-  ) {}
+  ) { }
 
   async create(payload: PostulacionPayload, trabajadorId: string) {
     const { data: rawTrabajo, error: trabajoError } = await this.supabase
@@ -80,7 +80,7 @@ export class PostulacionesService {
   async findByJobId(jobId: string) {
     const { data, error } = await this.supabase
       .from('postulaciones')
-      .select('*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url)')
+      .select('*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)')
       .eq('job_id', jobId)
       .order('created_at', { ascending: false });
 
@@ -97,7 +97,7 @@ export class PostulacionesService {
     const { data: enviadas, error: errorEnviadas } = await this.supabase
       .from('postulaciones')
       .select(
-        '*, trabajo:jobs(*, perfiles!contractor_id(nombre_completo, foto_url)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
+        '*, trabajo:jobs(*, perfiles!contractor_id(id, nombre_completo, foto_url, rating_promedio, total_calificaciones)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)',
       )
       .eq('trabajador_id', userId)
       .order('created_at', { ascending: false });
@@ -127,7 +127,7 @@ export class PostulacionesService {
       const { data: dataRecibidas, error: errorRecibidas } = await this.supabase
         .from('postulaciones')
         .select(
-          '*, trabajo:jobs(*, perfiles!contractor_id(nombre_completo, foto_url)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url)',
+          '*, trabajo:jobs(*, perfiles!contractor_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)), trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)',
         )
         .in('job_id', trabajoIds)
         .order('created_at', { ascending: false });
@@ -215,17 +215,17 @@ export class PostulacionesService {
       if (servicios && servicios.length > 0) {
         serviciosId = (servicios[0] as unknown as { id: string }).id;
       } else {
-          const { data: newServicio } = await this.supabase
-            .from('servicios')
-            .insert({
-              id: crypto.randomUUID(),
-              trabajador_id: postulacion.trabajador_id,
-              oficio: tituloTrabajo,
-              descripcion: tituloTrabajo,
-              tarifa_promedio: precioFinal,
-            } as never)
-            .select('id')
-            .single();
+        const { data: newServicio } = await this.supabase
+          .from('servicios')
+          .insert({
+            id: crypto.randomUUID(),
+            trabajador_id: postulacion.trabajador_id,
+            oficio: tituloTrabajo,
+            descripcion: tituloTrabajo,
+            tarifa_promedio: precioFinal,
+          } as never)
+          .select('id')
+          .single();
 
         if (!newServicio)
           throw new InternalServerErrorException(

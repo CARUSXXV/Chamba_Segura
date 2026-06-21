@@ -12,6 +12,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { ServiciosModule } from './servicios/servicios.module';
 import { ContratacionesModule } from './contrataciones/contrataciones.module';
 import { PostulacionesModule } from './postulaciones/postulaciones.module';
+import { ResenasModule } from './resenas/resenas.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PostulacionesModule } from './postulaciones/postulaciones.module';
     ServiciosModule,
     ContratacionesModule,
     PostulacionesModule,
+    ResenasModule,
   ],
   controllers: [AppController],
   providers: [AppService],

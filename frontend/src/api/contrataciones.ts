@@ -20,7 +20,12 @@ export interface Contratacion {
   precio_final: number;
   servicio?: Servicio & {
     trabajador_id?: string;
-    trabajador?: { nombre_completo: string };
+    trabajador?: { 
+      nombre_completo: string;
+      foto_url?: string;
+      rating_promedio?: number | null;
+      total_calificaciones?: number | null;
+    };
   };
   cliente?: { nombre_completo: string };
   trabajador?: { nombre_completo: string };
@@ -28,6 +33,7 @@ export interface Contratacion {
     title?: string;
     description?: string;
   };
+  resenas?: { calificacion: number; comentario: string }[];
 }
 
 export interface ContratacionPayload {

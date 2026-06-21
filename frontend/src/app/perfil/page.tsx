@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import EstrellasUsuario from "@/app/components/EstrellasUsuarios";
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -33,7 +34,7 @@ export default function VerPerfilPage() {
         try {
           // El token ya lleva tu ID encriptado. El backend sabe quién eres.
           const data = await fetchProfileById(session.access_token, user?.id as string);
-          
+
           setProfileData({
             nombre_completo: data.nombre_completo || user?.user_metadata?.nombre_completo || '',
             username: data.username || user?.user_metadata?.username || '',
@@ -52,7 +53,7 @@ export default function VerPerfilPage() {
           setLoading(false);
         }
       };
-      
+
       loadProfile();
     }
   }, [authLoading, session, user, router]);
@@ -63,15 +64,15 @@ export default function VerPerfilPage() {
     const confirmDelete = window.confirm(
       '¿Estás absolutamente seguro? Esta acción es irreversible y eliminará todos tus datos.'
     );
-    
+
     if (!confirmDelete) return;
 
     setDeleting(true);
 
     try {
       // Usa aquí la función que tengas en tu api/profile.ts
-      await deleteProfile(session.access_token, user?.id as string); 
-      
+      await deleteProfile(session.access_token, user?.id as string);
+
       alert('Cuenta eliminada exitosamente.');
       signOut();
       router.push('/');
@@ -106,7 +107,7 @@ export default function VerPerfilPage() {
               <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Link 
+              <Link
                 href="/perfil/editar"
                 className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
               >
@@ -130,6 +131,14 @@ export default function VerPerfilPage() {
             </div>
 
             <div className="px-6 py-3 flex items-center justify-between">
+              <p className="text-xs text-gray-500">Calificación</p>
+              <EstrellasUsuario
+                usuarioId={user?.id || ""}
+                token={session?.access_token || ""}
+              />
+            </div>
+
+            <div className="px-6 py-3 flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500">Correo de contacto</p>
                 <p className="text-sm font-medium text-gray-900 mt-0.5">{profileData.email_contacto || '—'}</p>
@@ -149,7 +158,7 @@ export default function VerPerfilPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Zona de Peligro (Danger Zone) */}
         <div className="bg-red-50 rounded-xl border border-red-200 px-6 py-4 mt-6">
           <div className="flex items-center justify-between">
@@ -159,7 +168,7 @@ export default function VerPerfilPage() {
                 Eliminar tu cuenta es irreversible.
               </p>
             </div>
-            <button 
+            <button
               onClick={handleDeleteAccount}
               disabled={deleting}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"

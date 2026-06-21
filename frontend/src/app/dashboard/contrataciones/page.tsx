@@ -10,11 +10,11 @@ import {
   Contratacion,
   uploadDocumentoContrato,
 } from "@/api/contrataciones";
-import {
-  fetchPostulaciones,
-  Postulacion,
-} from "@/api/postulaciones";
+import EstrellasUsuarios from "@/app/components/EstrellasUsuarios";
+
+import { fetchPostulaciones, Postulacion } from "@/api/postulaciones";
 import { createChat } from "@/api/chats";
+import { createResena } from "@/api/resenas";
 import Link from "next/link";
 
 export default function DashboardContratacionesPage() {
@@ -28,6 +28,11 @@ export default function DashboardContratacionesPage() {
   const [tab, setTab] = useState<"pendientes" | "activos" | "historial">(
     "pendientes",
   );
+  const [ratingModalOpen, setRatingModalOpen] = useState(false);
+  const [contratacionToRate, setContratacionToRate] = useState<Contratacion | null>(null);
+  const [ratingVal, setRatingVal] = useState(5);
+  const [comentario, setComentario] = useState("");
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   const loadData = useCallback(async () => {
     const accessToken = session?.access_token;
@@ -95,6 +100,37 @@ export default function DashboardContratacionesPage() {
       router.push("/mensajeria");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error al abrir chat");
+    }
+  };
+
+  const handleOpenRating = (c: Contratacion) => {
+    setContratacionToRate(c);
+    setRatingVal(5);
+    setComentario("");
+    setRatingModalOpen(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (!session?.access_token || !contratacionToRate) return;
+    setSubmittingRating(true);
+    try {
+      // Sacamos el ID del trabajador ignorando las quejas de TypeScript
+      const trabajadorId = contratacionToRate.servicio?.trabajador_id || (contratacionToRate.servicio?.trabajador as any)?.id;
+
+      await createResena(session.access_token, {
+        contrataciones_id: contratacionToRate.id,
+        evaluado_id: trabajadorId || "", // ¡Ahora sí el evaluado es el trabajador!
+        evaluador_id: user?.id || "",
+        calificacion: ratingVal,
+        comentario: comentario.trim() || undefined,
+      });
+      setRatingModalOpen(false);
+      setContratacionToRate(null);
+      loadData();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al enviar reseña");
+    } finally {
+      setSubmittingRating(false);
     }
   };
 
@@ -240,17 +276,25 @@ export default function DashboardContratacionesPage() {
                         <p>💰 <span className="font-bold text-gray-900">${p.trabajo.budget}</span></p>
                       ) : null}
                     </div>
-                    <div className="mt-4 flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
+                    <div className="mt-4 flex items-start gap-3">
+                      <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
                         {p.trabajador_id === user?.id
                           ? p.trabajo?.perfiles?.nombre_completo?.charAt(0)
                           : p.trabajador?.nombre_completo?.charAt(0)}
                       </div>
-                      <p className="text-xs font-semibold text-gray-700">
-                        {p.trabajador_id === user?.id
-                          ? `Contratante: ${p.trabajo?.perfiles?.nombre_completo || "Desconocido"}`
-                          : `Trabajador: ${p.trabajador?.nombre_completo || "Desconocido"}`}
-                      </p>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-semibold text-gray-700">
+                          {p.trabajador_id === user?.id
+                            ? `Contratante: ${p.trabajo?.perfiles?.nombre_completo || "Desconocido"}`
+                            : `Trabajador: ${p.trabajador?.nombre_completo || "Desconocido"}`}
+                        </p>
+                        <div className="mt-0.5 scale-90 origin-left">
+                          <EstrellasUsuarios
+                            usuarioId={p.trabajador_id === user?.id ? ((p.trabajo?.perfiles as any)?.id || "") : p.trabajador_id}
+                            token={session?.access_token || ""}
+                          />
+                        </div>
+                      </div>
                     </div>
                     {p.trabajador_id !== user?.id && p.mensaje && (
                       <p className="mt-2 text-sm text-gray-500 italic line-clamp-2">
@@ -359,17 +403,25 @@ export default function DashboardContratacionesPage() {
                         {c.trabajo.description}
                       </p>
                     )}
-                    <div className="mt-4 flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-50 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600">
+                    <div className="mt-4 flex items-start gap-3">
+                      <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
                         {c.cliente_id === user?.id
                           ? c.servicio?.trabajador?.nombre_completo?.charAt(0)
                           : c.cliente?.nombre_completo?.charAt(0)}
                       </div>
-                      <p className="text-xs font-semibold text-gray-700">
-                        {c.cliente_id === user?.id
-                          ? `Trabajador: ${c.servicio?.trabajador?.nombre_completo}`
-                          : `Cliente: ${c.cliente?.nombre_completo}`}
-                      </p>
+                      <div className="flex flex-col">
+                        <p className="text-sm font-semibold text-gray-700">
+                          {c.cliente_id === user?.id
+                            ? `Trabajador: ${c.servicio?.trabajador?.nombre_completo || "Desconocido"}`
+                            : `Cliente: ${c.cliente?.nombre_completo || "Desconocido"}`}
+                        </p>
+                        <div className="mt-0.5 scale-90 origin-left">
+                          <EstrellasUsuarios
+                            usuarioId={c.cliente_id === user?.id ? (c.servicio?.trabajador_id || (c.servicio?.trabajador as any)?.id || "") : c.cliente_id}
+                            token={session?.access_token || ""}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -488,6 +540,25 @@ export default function DashboardContratacionesPage() {
                         </button>
                       )}
 
+                    {c.cliente_id === user?.id &&
+                      c.estado_contrato === EstadoContratacion.COMPLETADO &&
+                      (!c.resenas || c.resenas.length === 0) && (
+                        <button
+                          onClick={() => handleOpenRating(c)}
+                          className="w-full py-2 bg-yellow-500 text-white text-sm font-bold rounded-lg hover:bg-yellow-600 shadow-sm"
+                        >
+                          ⭐ Calificar Trabajador
+                        </button>
+                      )}
+
+                    {c.cliente_id === user?.id &&
+                      c.estado_contrato === EstadoContratacion.COMPLETADO &&
+                      c.resenas && c.resenas.length > 0 && (
+                        <div className="w-full py-2 bg-gray-50 border border-gray-200 text-gray-500 text-sm font-bold rounded-lg text-center">
+                          Reseña enviada: {c.resenas[0].calificacion} ⭐
+                        </div>
+                      )}
+
                     {c.documento_contrato_url && (
                       <a
                         href={c.documento_contrato_url}
@@ -504,6 +575,55 @@ export default function DashboardContratacionesPage() {
           </div>
         )}
       </main>
+
+      {/* Modal de Calificación */}
+      {ratingModalOpen && contratacionToRate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Calificar Trabajo</h3>
+            <p className="text-gray-500 text-sm mb-6">
+              ¿Cómo evaluarías el trabajo de {contratacionToRate.servicio?.trabajador?.nombre_completo || 'este trabajador'}?
+            </p>
+
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRatingVal(star)}
+                  className={`text-4xl transition-transform hover:scale-110 ${ratingVal >= star ? 'text-yellow-400' : 'text-gray-200'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={comentario}
+              onChange={(e) => setComentario(e.target.value)}
+              placeholder="Escribe un comentario (opcional)..."
+              className=" w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 text-sm mb-6 min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRatingModalOpen(false)}
+                className="flex-1 py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                disabled={submittingRating}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSubmitRating}
+                className="flex-1 py-3 px-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={submittingRating}
+              >
+                {submittingRating ? 'Enviando...' : 'Enviar Reseña'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

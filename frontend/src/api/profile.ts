@@ -8,6 +8,8 @@ export interface Profile {
   email: string;
   contractor_id: string;
   creado_el: string;
+  rating_promedio?: number | null;
+  total_calificaciones?: number | null;
 }
 
 export interface profilePayload {

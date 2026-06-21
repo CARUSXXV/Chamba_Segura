@@ -13,11 +13,15 @@ export interface Postulacion {
     perfiles?: {
       nombre_completo?: string;
       foto_url?: string;
+      rating_promedio?: number | null;
+      total_calificaciones?: number | null;
     } | null;
   };
   trabajador?: {
     nombre_completo?: string;
     foto_url?: string;
+    rating_promedio?: number | null;
+    total_calificaciones?: number | null;
   };
 }
 
