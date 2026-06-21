@@ -10,7 +10,7 @@ import {
   Contratacion,
   uploadDocumentoContrato,
 } from "@/api/contrataciones";
-import EstrellasUsuarios from "@/app/components/EstrellasUsuarios";
+import EstrellasUsuario from "@/app/components/EstrellasUsuarios";
 
 import { fetchPostulaciones, Postulacion } from "@/api/postulaciones";
 import { createChat } from "@/api/chats";
@@ -277,19 +277,41 @@ export default function DashboardContratacionesPage() {
                       ) : null}
                     </div>
                     <div className="mt-4 flex items-start gap-3">
+                      {/* Avatar Dinámico */}
                       <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
                         {p.trabajador_id === user?.id
-                          ? p.trabajo?.perfiles?.nombre_completo?.charAt(0)
-                          : p.trabajador?.nombre_completo?.charAt(0)}
+                          ? p.trabajo?.perfiles?.nombre_completo?.charAt(0) || "U"
+                          : p.trabajador?.nombre_completo?.charAt(0) || "U"}
                       </div>
+
+                      {/* Nombre Clickeable y Estrellas */}
                       <div className="flex flex-col">
                         <p className="text-sm font-semibold text-gray-700">
-                          {p.trabajador_id === user?.id
-                            ? `Contratante: ${p.trabajo?.perfiles?.nombre_completo || "Desconocido"}`
-                            : `Trabajador: ${p.trabajador?.nombre_completo || "Desconocido"}`}
+                          {p.trabajador_id === user?.id ? (
+                            <>
+                              Contratante:{" "}
+                              <Link
+                                href={`/perfil/${(p.trabajo?.perfiles as any)?.id || ""}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              >
+                                {p.trabajo?.perfiles?.nombre_completo || "Desconocido"}
+                              </Link>
+                            </>
+                          ) : (
+                            <>
+                              Trabajador:{" "}
+                              <Link
+                                href={`/perfil/${p.trabajador_id}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              >
+                                {p.trabajador?.nombre_completo || "Desconocido"}
+                              </Link>
+                            </>
+                          )}
                         </p>
+
                         <div className="mt-0.5 scale-90 origin-left">
-                          <EstrellasUsuarios
+                          <EstrellasUsuario
                             usuarioId={p.trabajador_id === user?.id ? ((p.trabajo?.perfiles as any)?.id || "") : p.trabajador_id}
                             token={session?.access_token || ""}
                           />
@@ -404,19 +426,41 @@ export default function DashboardContratacionesPage() {
                       </p>
                     )}
                     <div className="mt-4 flex items-start gap-3">
+                      {/* Avatar Dinámico */}
                       <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
                         {c.cliente_id === user?.id
-                          ? c.servicio?.trabajador?.nombre_completo?.charAt(0)
-                          : c.cliente?.nombre_completo?.charAt(0)}
+                          ? c.servicio?.trabajador?.nombre_completo?.charAt(0) || "U"
+                          : c.cliente?.nombre_completo?.charAt(0) || "U"}
                       </div>
+
+                      {/* Nombre Clickeable y Estrellas */}
                       <div className="flex flex-col">
                         <p className="text-sm font-semibold text-gray-700">
-                          {c.cliente_id === user?.id
-                            ? `Trabajador: ${c.servicio?.trabajador?.nombre_completo || "Desconocido"}`
-                            : `Cliente: ${c.cliente?.nombre_completo || "Desconocido"}`}
+                          {c.cliente_id === user?.id ? (
+                            <>
+                              Trabajador:{" "}
+                              <Link
+                                href={`/perfil/${c.servicio?.trabajador_id || (c.servicio?.trabajador as any)?.id || ""}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              >
+                                {c.servicio?.trabajador?.nombre_completo || "Desconocido"}
+                              </Link>
+                            </>
+                          ) : (
+                            <>
+                              Cliente:{" "}
+                              <Link
+                                href={`/perfil/${c.cliente_id}`}
+                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                              >
+                                {c.cliente?.nombre_completo || "Desconocido"}
+                              </Link>
+                            </>
+                          )}
                         </p>
+
                         <div className="mt-0.5 scale-90 origin-left">
-                          <EstrellasUsuarios
+                          <EstrellasUsuario
                             usuarioId={c.cliente_id === user?.id ? (c.servicio?.trabajador_id || (c.servicio?.trabajador as any)?.id || "") : c.cliente_id}
                             token={session?.access_token || ""}
                           />
