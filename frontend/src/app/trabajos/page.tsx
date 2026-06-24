@@ -1,10 +1,12 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { fetchJobs, Job, JobFilter } from '@/api/jobs';
 import Link from 'next/link';
+import { useGeolocation } from '@/utils/useGeolocation';
+import { getFromCache, setInCache, buildCacheKey } from '@/utils/cache';
 
 const CATEGORIES = [
   'Plomería',
@@ -19,21 +21,41 @@ const CATEGORIES = [
 
 export default function TrabajosPage() {
   const { user, session, signOut, isLoading: authLoading } = useAuth();
+  const { location, formatDistance, loading: geoLoading, denied } = useGeolocation();
   const router = useRouter();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [filters, setFilters] = useState<JobFilter>({
     category: '',
-    skills: []
+    radius: 0
   });
-  const [skillInput, setSkillInput] = useState('');
-  const [fetchId, setFetchId] = useState(0);
+  const cacheKey = buildCacheKey('trabajos', filters as Record<string, unknown>);
+  const cached = getFromCache<Job[]>(cacheKey);
+  const [jobs, setJobs] = useState<Job[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Sync URL search params on mount
+  useEffect(() => {
+    const category = searchParams.get('category') || '';
+    const radius = Number(searchParams.get('radius')) || 0;
+    setFilters({ category, radius });
+  }, []);
+
+  // Update URL search params when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.category) params.set('category', filters.category);
+    if (filters.radius) params.set('radius', filters.radius.toString());
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+  }, [filters, pathname, router]);
 
   const refreshJobs = () => {
     setLoading(true);
     setError(null);
-    setFetchId(id => id + 1);
+    setRefreshKey(k => k + 1);
   };
 
   useEffect(() => {
@@ -45,44 +67,39 @@ export default function TrabajosPage() {
 
     let cancelled = false;
 
-    const fetchData = async () => {
+    const fetchData = async (useGps: boolean) => {
+      if (cancelled) return;
       try {
         const data = await fetchJobs(session.access_token, {
           category: filters.category || undefined,
-          skills: filters.skills?.length ? filters.skills : undefined
+          latitude: useGps ? location?.latitude : undefined,
+          longitude: useGps ? location?.longitude : undefined,
+          radius: filters.radius
         });
-        if (!cancelled) setJobs(data);
+        if (cancelled) return;
+        setJobs(data);
+        setError(null);
+        if (!useGps) setInCache(cacheKey, data);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Error al cargar los trabajos');
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Error al cargar los trabajos');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (cancelled) return;
+        setLoading(false);
       }
     };
 
-    fetchData();
+    // 1. Fetch inmediato sin GPS
+    setLoading(true);
+    fetchData(false);
+
+    // 2. Si GPS ya está disponible, re-fetch con GPS
+    if (location && !geoLoading) {
+      fetchData(true);
+    }
 
     return () => { cancelled = true; };
-  }, [authLoading, router, session, filters, fetchId]);
-
-  const handleAddSkill = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && skillInput.trim()) {
-      e.preventDefault();
-      if (!filters.skills?.includes(skillInput.trim())) {
-        setFilters(prev => ({
-          ...prev,
-          skills: [...(prev.skills || []), skillInput.trim()]
-        }));
-      }
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (skillToRemove: string) => {
-    setFilters(prev => ({
-      ...prev,
-      skills: prev.skills?.filter(s => s !== skillToRemove)
-    }));
-  };
+  }, [authLoading, router, session, filters, location, geoLoading, refreshKey]);
 
   if (authLoading) {
     return (
@@ -136,7 +153,7 @@ export default function TrabajosPage() {
 
         {/* Filtros */}
         <div className="bg-white p-6 rounded-xl border border-gray-200 mb-8 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
               <select 
@@ -151,27 +168,20 @@ export default function TrabajosPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Habilidades (Enter para agregar)</label>
-              <input 
-                type="text"
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Distancia Máxima (km)</label>
+              <select
                 className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="Ej: Tuberías, Cableado..."
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={handleAddSkill}
-              />
-              <div className="flex flex-wrap gap-2 mt-3">
-                {filters.skills?.map(skill => (
-                  <span key={skill} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">
-                    {skill}
-                    <button onClick={() => removeSkill(skill)} className="hover:text-blue-900">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
+                value={filters.radius || 0}
+                onChange={(e) => setFilters(prev => ({ ...prev, radius: Number(e.target.value) }))}
+              >
+                <option value={0}>Todas las distancias</option>
+                <option value={5000}>5 km</option>
+                <option value={10000}>10 km</option>
+                <option value={25000}>25 km</option>
+                <option value={50000}>50 km</option>
+                <option value={100000}>100 km</option>
+                <option value={500000}>500 km</option>
+              </select>
             </div>
           </div>
         </div>
@@ -229,9 +239,28 @@ export default function TrabajosPage() {
                     {job.budget ? `$${job.budget}` : 'Por definir'}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
                   {job.title}
                 </h3>
+                {job.distancia_metros !== undefined && job.distancia_metros !== null ? (
+                  <p className="text-blue-600 text-xs font-semibold mb-2 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    {formatDistance(job.distancia_metros)}
+                  </p>
+                ) : job.ubicacion ? (
+                  <p className={`text-xs font-semibold mb-2 flex items-center gap-1 ${geoLoading ? 'text-blue-500' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-500'}`}>
+                    <svg className={`w-3 h-3 ${geoLoading ? 'animate-spin' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación' : 'Ubicación no disponible'}
+                  </p>
+                ) : (
+                  <p className="text-gray-400 text-xs font-medium mb-2 flex items-center gap-1">
+                    <span>🌐</span> Cobertura nacional / Sin ubicación
+                  </p>
+                )}
                 <p className="text-gray-500 text-sm line-clamp-2 mb-4">
                   {job.description}
                 </p>

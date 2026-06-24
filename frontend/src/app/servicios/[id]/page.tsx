@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { fetchServicioById, Servicio } from "@/api/servicios";
 import { createContratacion, EstadoContratacion } from "@/api/contrataciones";
 import Link from "next/link";
+import { parseUbicacion, buildMapSrcDoc } from "@/utils/mapUtils";
 
 export default function DetalleServicioPage() {
   const { user, session, isLoading: authLoading } = useAuth();
@@ -206,6 +207,28 @@ export default function DetalleServicioPage() {
                 </div>
               </div>
             )}
+
+            {servicio.ubicacion && (() => {
+              const coords = parseUbicacion(servicio.ubicacion);
+              if (!coords) return null;
+              return (
+                <div className="mb-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    <span>📍</span> Zona de cobertura
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Por privacidad, mostramos solo el área general donde opera este profesional.
+                  </p>
+                  <div className="h-64 w-full rounded-2xl overflow-hidden border border-gray-200 shadow-inner">
+                    <iframe
+                      className="h-full w-full border-none"
+                      srcDoc={buildMapSrcDoc(coords.lat, coords.lng)}
+                      title="Zona de cobertura del servicio"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="pt-8 border-t border-gray-100">
               {!isOwner && (

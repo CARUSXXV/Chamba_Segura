@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createServicio, ServicioPayload } from "@/api/servicios";
 import Link from "next/link";
+import { useGeolocation } from "@/utils/useGeolocation";
 
 const OFICIOS = [
   "Plomería",
@@ -21,6 +22,7 @@ const OFICIOS = [
 
 export default function NuevoServicioPage() {
   const { user, session, isLoading: authLoading } = useAuth();
+  const { location, error: geoError } = useGeolocation();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -54,6 +56,8 @@ export default function NuevoServicioPage() {
         descripcion: formData.descripcion,
         tarifa_promedio: formData.tarifa_promedio,
         firma_contrato: formData.firma_contrato || undefined,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
       };
 
       const newServicio = await createServicio(session.access_token, payload);
@@ -111,6 +115,33 @@ export default function NuevoServicioPage() {
             {error && (
               <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm">
                 {error}
+              </div>
+            )}
+
+            {geoError && (
+              <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4 rounded-md text-sm">
+                <span className="font-bold">Aviso de ubicación:</span> {geoError}.
+                Tu servicio se publicará sin ubicación exacta.
+              </div>
+            )}
+
+            {location && (
+              <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-md text-sm flex justify-between items-center">
+                <span>
+                  <span className="font-bold">Ubicación detectada:</span> Tu
+                  servicio aparecerá a clientes cercanos.
+                </span>
+                <svg
+                  className="w-5 h-5 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
             )}
 

@@ -12,6 +12,37 @@ export class JobsService {
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
   async searchJobs(filters: JobFilter) {
+    const lat = filters.latitude ? Number(filters.latitude) : undefined;
+    const long = filters.longitude ? Number(filters.longitude) : undefined;
+    const radius = filters.radius ? Number(filters.radius) : undefined;
+    const skills = typeof filters.skills === 'string' ? [filters.skills] : filters.skills;
+
+    if (lat !== undefined && !isNaN(lat) && long !== undefined && !isNaN(long)) {
+      const { data, error } = await this.supabase.rpc('buscar_trabajos_cercanos' as any, {
+        lat,
+        long,
+        radio_metros: radius || null,
+        categoria: filters.category || null,
+        habilidades: skills || null,
+      } as any);
+
+      if (error) {
+        throw new InternalServerErrorException(
+          `Error consultando trabajos cercanos: ${error.message}`,
+        );
+      }
+
+      // Mapear el resultado para que coincida con la estructura esperada por el frontend
+      return (data as any[]).map((job) => ({
+        ...job,
+        perfiles: {
+          id: job.contractor_id,
+          nombre_completo: job.perfil_nombre_completo,
+          foto_url: job.perfil_foto_url,
+        },
+      }));
+    }
+
     let query = this.supabase
       .from('jobs')
       .select('*, perfiles!contractor_id(id, nombre_completo, foto_url)');
@@ -20,9 +51,9 @@ export class JobsService {
       query = query.eq('category', filters.category);
     }
 
-    if (filters.skills && filters.skills.length > 0) {
+    if (skills && skills.length > 0) {
       // Búsqueda en array de PostgreSQL: trae trabajos que contengan estas habilidades
-      query = query.contains('required_skills', filters.skills);
+      query = query.contains('required_skills', skills);
     }
 
     const { data, error } = await query;
@@ -50,9 +81,19 @@ export class JobsService {
   }
 
   async createJob(payload: JobPayload) {
-    const { data, error } = await this.supabase
+    const { latitude, longitude, ...jobData } = payload;
+
+    const insertData: any = {
+      ...jobData,
+    };
+
+    if (latitude && longitude) {
+      insertData.ubicacion = `POINT(${longitude} ${latitude})`;
+    }
+
+    const { data, error } = await (this.supabase as any)
       .from('jobs')
-      .insert([payload as unknown as never])
+      .insert([insertData])
       .select();
 
     if (error)
@@ -64,9 +105,19 @@ export class JobsService {
   }
 
   async updateJob(id: string, payload: Partial<JobPayload>) {
-    const { data, error } = await this.supabase
+    const { latitude, longitude, ...jobData } = payload;
+
+    const updateData: any = {
+      ...jobData,
+    };
+
+    if (latitude && longitude) {
+      updateData.ubicacion = `POINT(${longitude} ${latitude})`;
+    }
+
+    const { data, error } = await (this.supabase as any)
       .from('jobs')
-      .update(payload as unknown as never)
+      .update(updateData)
       .eq('id', id)
       .select();
 

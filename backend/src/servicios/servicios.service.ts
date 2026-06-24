@@ -13,6 +13,8 @@ export interface ServicioPayload {
   descripcion: string;
   tarifa_promedio: number;
   firma_contrato?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export { ServicioDetails };
@@ -25,14 +27,43 @@ export class ServiciosService {
     return this.supabaseService.getClient();
   }
 
-  async findAll(): Promise<ServicioDetails[]> {
-    const { data, error } = await this.client
+  async findAll(oficio?: string): Promise<ServicioDetails[]> {
+    let query = this.client
       .from('servicios')
       .select('*, perfiles!trabajador_id(nombre_completo, foto_url)');
 
+    if (oficio) {
+      query = query.eq('oficio', oficio);
+    }
+
+    const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
     return (data ?? []) as unknown as ServicioDetails[];
+  }
+
+  async findNearby(
+    lat: number,
+    long: number,
+    radius?: number,
+    oficio?: string,
+  ): Promise<ServicioDetails[]> {
+    const { data, error } = await this.client.rpc('buscar_servicios_cercanos' as any, {
+      lat,
+      long,
+      radio_metros: radius || null,
+      tipo_oficio: oficio || null,
+    } as any);
+
+    if (error) throw new InternalServerErrorException(error.message);
+
+    return (data as any[]).map((servicio) => ({
+      ...servicio,
+      perfiles: {
+        nombre_completo: servicio.perfil_nombre_completo,
+        foto_url: servicio.perfil_foto_url,
+      },
+    })) as unknown as ServicioDetails[];
   }
 
   async findOne(id: string): Promise<ServicioDetails> {
@@ -48,13 +79,23 @@ export class ServiciosService {
   }
 
   async create(payload: ServicioPayload): Promise<ServicioDetails> {
+    const { latitude, longitude, ...rest } = payload;
     const clean = Object.fromEntries(
-      Object.entries(payload).filter(([, v]) => v !== undefined),
+      Object.entries(rest).filter(([, v]) => v !== undefined),
     );
+
+    const insertData: any = {
+      id: crypto.randomUUID(),
+      ...clean,
+    };
+
+    if (latitude && longitude) {
+      insertData.ubicacion = `POINT(${longitude} ${latitude})`;
+    }
 
     const { data, error } = await this.client
       .from('servicios')
-      .insert({ id: crypto.randomUUID(), ...clean } as never)
+      .insert(insertData as never)
       .select('*, perfiles!trabajador_id(nombre_completo, foto_url)')
       .single();
 
@@ -75,10 +116,16 @@ export class ServiciosService {
     id: string,
     payload: Partial<ServicioPayload>,
   ): Promise<ServicioDetails> {
-    const updateData = {
-      ...payload,
+    const { latitude, longitude, ...rest } = payload;
+
+    const updateData: any = {
+      ...rest,
       actualizado_el: new Date().toISOString(),
     };
+
+    if (latitude && longitude) {
+      updateData.ubicacion = `POINT(${longitude} ${latitude})`;
+    }
 
     const { data, error } = await this.client
       .from('servicios')

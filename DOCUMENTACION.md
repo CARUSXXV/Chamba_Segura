@@ -291,17 +291,18 @@ El sistema adoptó un **modelo de perfil unificado**, eliminando la división r�
 - [x] Dashboard de contrataciones con tabs por estado
 - [x] Protección de rutas con middleware
 - [x] Diseño responsivo (Tailwind CSS)
+- [x] Búsqueda geolocalizada por radio de distancia
+- [x] Módulo de mensajería interna (tiempo real con WebSockets)
+- [x] Sistema de calificaciones y reseñas
+
 
 ### Funcionalidades Planeadas / En Desarrollo
-- [x] Módulo de mensajería interna (tiempo real con WebSockets)
+
 - [ ] Integración de pagos reales (Pasarela de pago)
-- [ ] Sistema de calificaciones y reseñas
 - [ ] Notificaciones en tiempo real (WebSockets)
 - [ ] Subida de fotos y archivos a almacenamiento Supabase
 - [ ] Panel de administración
-- [ ] Búsqueda geolocalizada
 - [ ] Estadísticas y reportes para técnicos
-- [ ] Versión mobile (PWA)
 - [ ] Sistema de referidos
 - [ ] Múltiples idiomas
 
@@ -321,6 +322,23 @@ El sistema adoptó un **modelo de perfil unificado**, eliminando la división r�
 | **CORS** | Habilitado globalmente |
 | **Modalidad de trabajo** | SPA (Single Page Application) con CSR |
 | **Estados UI** | Carga, error, vacío, éxito (en todas las vistas) |
+
+---
+
+## 📍 Geolocalización y Búsqueda Espacial
+
+ChambaSegura utiliza **PostGIS** para ofrecer una experiencia de búsqueda basada en la ubicación del usuario.
+
+### Características
+- **Detección Automática**: El sistema solicita permiso para acceder a la ubicación del navegador mediante un hook personalizado `useGeolocation`.
+- **Filtro de Radio**: Los usuarios pueden filtrar trabajos y servicios en un radio de 5km hasta 500km.
+- **Cálculo de Distancia**: Cada tarjeta de trabajo o servicio muestra la distancia aproximada al usuario ("A 2.5 km de ti").
+- **Privacidad**: Si el usuario deniega el permiso, el sistema sigue funcionando mediante búsquedas globales sin mostrar distancias.
+
+### Implementación Técnica
+- **Base de Datos**: Uso del tipo `geography(POINT, 4326)` con índices espaciales GIST.
+- **Backend**: Funciones RPC de PostgreSQL (`buscar_trabajos_cercanos`, `buscar_servicios_cercanos`) para cálculos eficientes en el servidor mediante `ST_Distance` y `ST_DWithin`.
+- **Frontend**: Hook de React para gestión de estado de geolocalización y formateo de distancias.
 
 ---
 

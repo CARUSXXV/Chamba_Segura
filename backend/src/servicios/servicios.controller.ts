@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ServiciosService, ServicioPayload } from './servicios.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -16,8 +17,25 @@ export class ServiciosController {
   constructor(private readonly serviciosService: ServiciosService) {}
 
   @Get()
-  async findAll() {
-    return this.serviciosService.findAll();
+  async findAll(
+    @Query('latitude') latitudeStr?: string,
+    @Query('longitude') longitudeStr?: string,
+    @Query('radius') radiusStr?: string,
+    @Query('oficio') oficio?: string,
+  ) {
+    const latitude = latitudeStr ? Number(latitudeStr) : undefined;
+    const longitude = longitudeStr ? Number(longitudeStr) : undefined;
+    const radius = radiusStr ? Number(radiusStr) : undefined;
+
+    if (latitude !== undefined && !isNaN(latitude) && longitude !== undefined && !isNaN(longitude)) {
+      return this.serviciosService.findNearby(
+        latitude,
+        longitude,
+        radius,
+        oficio,
+      );
+    }
+    return this.serviciosService.findAll(oficio);
   }
 
   @Get(':id')

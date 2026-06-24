@@ -18,11 +18,16 @@ export interface JobPayload {
   required_skills?: string[];
   budget?: number;
   contractor_id: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface JobFilter {
   category?: string;
   skills?: string[]; // Pasado por query params, ej: ?skills=React&skills=Node
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
 }
 
 @Controller('jobs')

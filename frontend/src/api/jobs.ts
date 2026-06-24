@@ -7,6 +7,11 @@ export interface Job {
   budget: number | null;
   contractor_id: string;
   created_at: string;
+  distancia_metros?: number | null;
+  ubicacion?: {
+    type: string;
+    coordinates: [number, number]; // [longitude, latitude]
+  } | null;
   perfiles?: {
     id: string;
     nombre_completo: string;
@@ -21,11 +26,16 @@ export interface JobPayload {
   required_skills?: string[];
   budget?: number;
   contractor_id: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface JobFilter {
   category?: string;
   skills?: string[];
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -38,6 +48,13 @@ export async function fetchJobs(token: string, filters?: JobFilter): Promise<Job
   }
   if (filters?.skills && filters.skills.length > 0) {
     filters.skills.forEach(skill => url.searchParams.append('skills', skill));
+  }
+  if (filters?.latitude !== undefined && filters?.longitude !== undefined) {
+    url.searchParams.append('latitude', filters.latitude.toString());
+    url.searchParams.append('longitude', filters.longitude.toString());
+    if (filters.radius) {
+      url.searchParams.append('radius', filters.radius.toString());
+    }
   }
 
   const response = await fetch(url.toString(), {

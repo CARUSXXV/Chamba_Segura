@@ -1,18 +1,58 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { fetchServicios, Servicio } from "@/api/servicios";
+import { fetchServicios, Servicio, ServicioFilter } from "@/api/servicios";
 import Link from "next/link";
+import { useGeolocation } from "@/utils/useGeolocation";
+import { getFromCache, setInCache, buildCacheKey } from "@/utils/cache";
+
+const OFICIOS = [
+  "Plomería",
+  "Electricidad",
+  "Carpintería",
+  "Limpieza",
+  "Pintura",
+  "Mecánica",
+  "Jardinería",
+  "Reparaciones",
+  "Mudanzas",
+  "Otros",
+];
 
 export default function ServiciosPage() {
   const { user, session, signOut, isLoading: authLoading } = useAuth();
+  const { location, formatDistance, loading: geoLoading, denied } = useGeolocation();
   const router = useRouter();
-  const [servicios, setServicios] = useState<Servicio[]>([]);
-  const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [filters, setFilters] = useState<ServicioFilter>({
+    radius: 0,
+    oficio: "",
+  });
+  const cacheKey = buildCacheKey("servicios", filters as Record<string, unknown>);
+  const cached = getFromCache<Servicio[]>(cacheKey);
+  const [servicios, setServicios] = useState<Servicio[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
+  // Sync URL search params on mount
+  useEffect(() => {
+    const oficio = searchParams.get("oficio") || "";
+    const radius = Number(searchParams.get("radius")) || 0;
+    setFilters({ oficio, radius });
+  }, []);
 
+  // Update URL search params when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.oficio) params.set("oficio", filters.oficio);
+    if (filters.radius) params.set("radius", filters.radius.toString());
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false });
+  }, [filters, pathname, router]);
+
+  // Efecto principal: fetch inmediato (sin GPS) + re-fetch cuando GPS resuelva
   useEffect(() => {
     if (authLoading) return;
     if (!session) {
@@ -22,26 +62,39 @@ export default function ServiciosPage() {
 
     let cancelled = false;
 
-    const fetchData = async () => {
+    const fetchData = async (useGps: boolean) => {
+      if (cancelled) return;
       try {
-        const data = await fetchServicios(session.access_token);
-        if (!cancelled) setServicios(data);
+        const data = await fetchServicios(session.access_token, {
+          latitude: useGps ? location?.latitude : undefined,
+          longitude: useGps ? location?.longitude : undefined,
+          radius: filters.radius,
+          oficio: filters.oficio || undefined,
+        });
+        if (cancelled) return;
+        setServicios(data);
+        setError(null);
+        if (!useGps) setInCache(cacheKey, data);
       } catch (err) {
-        if (!cancelled)
-          setError(
-            err instanceof Error ? err.message : "Error al cargar servicios",
-          );
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : "Error al cargar servicios");
       } finally {
-        if (!cancelled) setLoading(false);
+        if (cancelled) return;
+        setLoading(false);
       }
     };
 
-    fetchData();
+    // 1. Fetch inmediato sin GPS
+    setLoading(true);
+    fetchData(false);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [authLoading, router, session]);
+    // 2. Si GPS ya está disponible, re-fetch con GPS
+    if (location && !geoLoading) {
+      fetchData(true);
+    }
+
+    return () => { cancelled = true; };
+  }, [authLoading, router, session, filters, location, geoLoading]);
 
   if (authLoading) {
     return (
@@ -111,6 +164,57 @@ export default function ServiciosPage() {
           </Link>
         </div>
 
+        {/* Filtros */}
+        <div className="bg-white p-6 rounded-xl border border-gray-200 mb-8 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Categoría / Oficio
+              </label>
+              <select
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                value={filters.oficio}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    oficio: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Todos los oficios</option>
+                {OFICIOS.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Distancia Máxima (km)
+              </label>
+              <select
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                value={filters.radius || 0}
+                onChange={(e) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    radius: Number(e.target.value),
+                  }))
+                }
+              >
+                <option value={0}>Todas las distancias</option>
+                <option value={5000}>5 km</option>
+                <option value={10000}>10 km</option>
+                <option value={25000}>25 km</option>
+                <option value={50000}>50 km</option>
+                <option value={100000}>100 km</option>
+                <option value={500000}>500 km</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
@@ -175,6 +279,41 @@ export default function ServiciosPage() {
                     ${s.tarifa_promedio}
                   </span>
                 </div>
+                {s.distancia_metros !== undefined && s.distancia_metros !== null ? (
+                  <p className="text-blue-600 text-xs font-semibold mb-2 flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {formatDistance(s.distancia_metros)}
+                  </p>
+                ) : s.ubicacion ? (
+                  <p className={`text-xs font-semibold mb-2 flex items-center gap-1 ${geoLoading ? 'text-blue-500' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-500'}`}>
+                    <svg
+                      className={`w-3 h-3 ${geoLoading ? 'animate-spin' : ''}`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación' : 'Ubicación no disponible'}
+                  </p>
+                ) : (
+                  <p className="text-gray-400 text-xs font-medium mb-2 flex items-center gap-1">
+                    <span>🌐</span> Cobertura nacional / Sin ubicación
+                  </p>
+                )}
                 {s.tipo_de_oficio && (
                   <span className="inline-block px-2 py-0.5 bg-gray-50 text-gray-600 text-xs font-medium rounded-md border border-gray-100 mb-3">
                     {s.tipo_de_oficio}

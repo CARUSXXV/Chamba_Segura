@@ -7,6 +7,7 @@ import { fetchJobById, deleteJob, Job } from '@/api/jobs';
 import { createPostulacion, fetchPostulacionesByJob, updateEstadoPostulacion, Postulacion } from '@/api/postulaciones';
 import ConfirmModal from '@/app/components/ConfirmModal';
 import Link from 'next/link';
+import { parseUbicacion, buildMapSrcDoc } from '@/utils/mapUtils';
 
 export default function DetalleTrabajoPage() {
   const { user, session, isLoading: authLoading } = useAuth();
@@ -195,6 +196,28 @@ export default function DetalleTrabajoPage() {
                 </div>
               </div>
             )}
+
+            {job.ubicacion && (() => {
+              const coords = parseUbicacion(job.ubicacion);
+              if (!coords) return null;
+              return (
+                <div className="mb-8 pt-6 border-t border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                    <span>📍</span> Ubicación aproximada
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Por privacidad, mostramos solo el área general del trabajo, no la dirección exacta.
+                  </p>
+                  <div className="h-64 w-full rounded-2xl overflow-hidden border border-gray-200 shadow-inner">
+                    <iframe
+                      className="h-full w-full border-none"
+                      srcDoc={buildMapSrcDoc(coords.lat, coords.lng)}
+                      title="Mapa de ubicación aproximada"
+                    />
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="pt-8 border-t border-gray-100 flex flex-wrap gap-4">
               {isOwner ? (

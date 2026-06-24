@@ -7,6 +7,11 @@ export interface Servicio {
   tarifa_promedio: number;
   firma_contrato: boolean;
   actualizado_el: string;
+  distancia_metros?: number | null;
+  ubicacion?: {
+    type: string;
+    coordinates: [number, number]; // [longitude, latitude]
+  } | null;
   perfiles?: {
     nombre_completo: string;
     foto_url: string;
@@ -22,13 +27,34 @@ export interface ServicioPayload {
   descripcion: string;
   tarifa_promedio: number;
   firma_contrato?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const SERVICIOS_URL = `${API_BASE_URL}/servicios`;
 
-export async function fetchServicios(token: string): Promise<Servicio[]> {
-  const response = await fetch(SERVICIOS_URL, {
+export interface ServicioFilter {
+  latitude?: number;
+  longitude?: number;
+  radius?: number;
+  oficio?: string;
+}
+
+export async function fetchServicios(token: string, filters?: ServicioFilter): Promise<Servicio[]> {
+  const url = new URL(SERVICIOS_URL);
+  if (filters?.latitude !== undefined && filters?.longitude !== undefined) {
+    url.searchParams.append('latitude', filters.latitude.toString());
+    url.searchParams.append('longitude', filters.longitude.toString());
+    if (filters.radius) {
+      url.searchParams.append('radius', filters.radius.toString());
+    }
+  }
+  if (filters?.oficio) {
+    url.searchParams.append('oficio', filters.oficio);
+  }
+
+  const response = await fetch(url.toString(), {
     headers: { 'Authorization': `Bearer ${token}` },
     cache: 'no-store',
   });

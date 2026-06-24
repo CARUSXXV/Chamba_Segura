@@ -9,6 +9,7 @@ export interface ProfilesRow {
     creado_el?: string | null;
     rating_promedio?: number | null;
     total_calificaciones?: number | null;
+    ubicacion?: any | null;
 }
 
 export interface ServiciosRow {
@@ -21,7 +22,11 @@ export interface ServiciosRow {
 
     trabajador_id?: string | null;
     oficio?: string | null;
+    tipo_de_oficio?: string | null;
+    descripcion?: string | null;
+    tarifa_promedio?: number | null;
     firma_contrato?: boolean | null;
+    ubicacion?: any | null;
     trabajador?: {
         nombre_completo?: string | null;
         foto_url?: string | null;
@@ -46,6 +51,7 @@ export interface ServicioDetails extends ServiciosRow {
         nombre_completo?: string | null;
         foto_url?: string | null;
     } | null;
+    distancia_metros?: number;
 }
 
 export interface ContratacionesRow {
@@ -89,7 +95,16 @@ export interface JobsRow {
         total_calificaciones?: number | null;
     } | null;
 
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    required_skills?: string[];
+    budget?: number;
+    contractor_id: string;
     enviado_el: string;
+    ubicacion?: any | null;
+    distancia_metros?: number;
 }
 export interface ResenasRow {
     id: string;
