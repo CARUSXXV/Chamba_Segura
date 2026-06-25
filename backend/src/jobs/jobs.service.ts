@@ -39,13 +39,15 @@ export class JobsService {
           id: job.contractor_id,
           nombre_completo: job.perfil_nombre_completo,
           foto_url: job.perfil_foto_url,
+          rating_promedio: job.perfil_rating_promedio,
+          total_calificaciones: job.perfil_total_calificaciones,
         },
       }));
     }
 
     let query = this.supabase
       .from('jobs')
-      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url)');
+      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url, rating_promedio, total_calificaciones)');
 
     if (filters.category) {
       query = query.eq('category', filters.category);
@@ -68,7 +70,7 @@ export class JobsService {
   async getJobById(id: string) {
     const { data, error } = await this.supabase
       .from('jobs')
-      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url)')
+      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url, rating_promedio, total_calificaciones)')
       .eq('id', id)
       .single();
 

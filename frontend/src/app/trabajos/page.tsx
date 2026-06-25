@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { fetchJobs, Job, JobFilter } from '@/api/jobs';
 import Link from 'next/link';
 import { useGeolocation } from '@/utils/useGeolocation';
@@ -20,6 +20,14 @@ const CATEGORIES = [
 ];
 
 export default function TrabajosPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" /></div>}>
+      <TrabajosContent />
+    </Suspense>
+  );
+}
+
+function TrabajosContent() {
   const { user, session, signOut, isLoading: authLoading } = useAuth();
   const { location, formatDistance, loading: geoLoading, denied } = useGeolocation();
   const router = useRouter();
@@ -122,6 +130,7 @@ export default function TrabajosPage() {
             <span className="text-xl">🛡️</span>
             <span className="text-lg font-black text-blue-600 tracking-tighter">ChambaSegura</span>
           </div>
+          
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">{user?.user_metadata?.nombre_completo || user?.email}</span>
             <button onClick={() => signOut()} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all">Salir</button>
@@ -129,152 +138,218 @@ export default function TrabajosPage() {
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Trabajos Disponibles</h1>
-            <p className="text-gray-500">Explora oportunidades o publica una nueva necesidad.</p>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        
+        {/* Header de la Página */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+          <div className="max-w-xl">
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight mb-2 sm:text-4xl">
+              Trabajos Disponibles
+            </h1>
+            <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
+              Explora oportunidades validadas cerca de ti o publica una nueva necesidad en minutos.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Link
               href="/servicios/nuevo"
-              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-semibold rounded-xl text-gray-700 bg-white hover:bg-gray-50 transition-all shadow-sm"
+              className="inline-flex items-center justify-center px-5 py-3 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-2xs cursor-pointer active:scale-98"
             >
               Ofrecer un Servicio
             </Link>
             <Link 
               href="/trabajos/nuevo"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-semibold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm"
+              className="inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm cursor-pointer active:scale-98 shadow-blue-500/10"
             >
               Publicar Trabajo
             </Link>
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="bg-white p-6 rounded-xl border border-gray-200 mb-8 shadow-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Panel de Filtros */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-200/80 mb-10 shadow-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Categoría</label>
-              <select 
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                value={filters.category}
-                onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-              >
-                <option value="" className="text-gray-500">Todas las categorías</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat} className="text-gray-900">{cat}</option>
-                ))}
-              </select>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                Categoría
+              </label>
+              <div className="relative">
+                <select 
+                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer font-medium text-sm"
+                  value={filters.category}
+                  onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                >
+                  <option value="" className="text-gray-500">Todas las categorías</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat} className="text-gray-900">{cat}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
+
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Distancia Máxima (km)</label>
-              <select
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                value={filters.radius || 0}
-                onChange={(e) => setFilters(prev => ({ ...prev, radius: Number(e.target.value) }))}
-              >
-                <option value={0}>Todas las distancias</option>
-                <option value={5000}>5 km</option>
-                <option value={10000}>10 km</option>
-                <option value={25000}>25 km</option>
-                <option value={50000}>50 km</option>
-                <option value={100000}>100 km</option>
-                <option value={500000}>500 km</option>
-              </select>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                Distancia Máxima
+              </label>
+              <div className="relative">
+                <select
+                  className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer font-medium text-sm"
+                  value={filters.radius || 0}
+                  onChange={(e) => setFilters(prev => ({ ...prev, radius: Number(e.target.value) }))}
+                >
+                  <option value={0}>Todas las distancias</option>
+                  <option value={5000}>5 km</option>
+                  <option value={10000}>10 km</option>
+                  <option value={25000}>25 km</option>
+                  <option value={50000}>50 km</option>
+                  <option value={100000}>100 km</option>
+                  <option value={500000}>500 km</option>
+                </select>
+                <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
+        {/* Listado Principal con estados asíncronos */}
         {loading ? (
+          /* Skeletons Refinados */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4" />
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-full mb-6" />
-                <div className="h-8 bg-gray-100 rounded w-full" />
+              <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse space-y-4">
+                <div className="flex justify-between items-center">
+                  <div className="h-5 bg-gray-200 rounded-md w-1/4" />
+                  <div className="h-5 bg-gray-200 rounded-md w-1/5" />
+                </div>
+                <div className="h-6 bg-gray-200 rounded-md w-3/4" />
+                <div className="h-3 bg-gray-100 rounded-md w-1/3" />
+                <div className="space-y-2 pt-1">
+                  <div className="h-3 bg-gray-100 rounded-md w-full" />
+                  <div className="h-3 bg-gray-100 rounded-md w-5/6" />
+                </div>
+                <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3 bg-gray-200 rounded-md w-1/2" />
+                    <div className="h-2 bg-gray-100 rounded-md w-1/3" />
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl text-center">
-            <p className="font-bold mb-4">{error}</p>
+          /* Caja de Error Limpia */
+          <div className="bg-red-50/60 border border-red-200/60 text-red-700 p-8 rounded-2xl text-center max-w-lg mx-auto">
+            <div className="text-3xl mb-3">⚠️</div>
+            <p className="font-bold text-base text-gray-900 mb-2">Ocurrió un inconveniente</p>
+            <p className="text-sm text-red-600/90 mb-5">{error}</p>
             <button 
               onClick={refreshJobs}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm shadow-red-600/10"
             >
-              Reintentar
+              Reintentar carga
             </button>
           </div>
         ) : jobs.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
-            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+          /* Empty State Estilo Airbnb */
+          <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center max-w-xl mx-auto shadow-2xs">
+            <div className="w-14 h-14 bg-gray-50 border border-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-xl">
+              📭
             </div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">No hay trabajos publicados aún</h2>
-            <p className="text-gray-400 text-sm max-w-sm mx-auto mb-6">Prueba ajustando tus filtros o publica un nuevo requerimiento.</p>
+            <h2 className="text-xl font-bold text-gray-900 mb-1">No hay trabajos publicados</h2>
+            <p className="text-gray-500 text-sm max-w-xs mx-auto mb-6 leading-relaxed">
+              Prueba ajustando los filtros de búsqueda o sé el primero en abrir una vacante.
+            </p>
             <Link 
               href="/trabajos/nuevo"
-              className="inline-flex items-center font-semibold text-blue-600 hover:text-blue-700"
+              className="inline-flex items-center gap-1.5 font-bold text-sm text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
             >
-              Publica el primer trabajo &rarr;
+              Publica el primer trabajo
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </Link>
           </div>
         ) : (
+          /* Grid de Tarjetas Optimizado */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {jobs.map(job => (
               <Link 
                 key={job.id} 
                 href={`/trabajos/${job.id}`}
-                className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all"
+                className="group flex flex-col bg-white rounded-2xl border border-gray-200/90 p-6 hover:shadow-md hover:border-blue-400/60 transition-all duration-200 cursor-pointer relative"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-md">
+                {/* Badge de Categoría e Indicador de Presupuesto */}
+                <div className="flex justify-between items-center gap-4 mb-4 select-none">
+                  <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg uppercase tracking-wider border border-blue-100/50">
                     {job.category}
                   </span>
-                  <span className="text-sm font-bold text-gray-900">
-                    {job.budget ? `$${job.budget}` : 'Por definir'}
+                  <span className="text-base font-extrabold text-gray-900 shrink-0">
+                    {job.budget ? `$${job.budget} USD` : 'Por definir'}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                
+                {/* Título Con Protección Estricta */}
+                <h3 className="text-lg font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors truncate max-w-full" title={job.title}>
                   {job.title}
                 </h3>
+                
+                {/* Lógica Completa de Estados de Ubicación y GPS */}
                 {job.distancia_metros !== undefined && job.distancia_metros !== null ? (
-                  <p className="text-blue-600 text-xs font-semibold mb-2 flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  <p className="text-blue-600 text-xs font-bold mb-3.5 flex items-center gap-1 shrink-0">
+                    <svg className="w-3.5 h-3.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {formatDistance(job.distancia_metros)}
+                    A {formatDistance(job.distancia_metros)}
                   </p>
                 ) : job.ubicacion ? (
-                  <p className={`text-xs font-semibold mb-2 flex items-center gap-1 ${geoLoading ? 'text-blue-500' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-500'}`}>
-                    <svg className={`w-3 h-3 ${geoLoading ? 'animate-spin' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  <p className={`text-xs font-bold mb-3.5 flex items-center gap-1 shrink-0 ${geoLoading ? 'text-blue-500 animate-pulse' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-400'}`}>
+                    <svg className={`w-3.5 h-3.5 stroke-2 ${geoLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación' : 'Ubicación no disponible'}
+                    {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación para medir' : 'Ubicación no disponible'}
                   </p>
                 ) : (
-                  <p className="text-gray-400 text-xs font-medium mb-2 flex items-center gap-1">
+                  <p className="text-gray-400 text-xs font-semibold mb-3.5 flex items-center gap-1 shrink-0">
                     <span>🌐</span> Cobertura nacional / Sin ubicación
                   </p>
                 )}
-                <p className="text-gray-500 text-sm line-clamp-2 mb-4">
+                
+                {/* Descripción con límite de líneas controlado */}
+                <p className="text-gray-500 text-sm line-clamp-2 mb-5 flex-1 leading-relaxed">
                   {job.description}
                 </p>
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-400">
+                
+                {/* Footer de la Tarjeta: Info del Creador */}
+                <div className="flex items-center gap-3 pt-3.5 border-t border-gray-100 mt-auto">
+                  <div className="w-8 h-8 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center text-xs font-extrabold text-gray-500 uppercase select-none shrink-0">
                     {job.perfiles?.nombre_completo?.charAt(0) || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">
+                    <p className="text-xs font-bold text-gray-900 truncate">
                       {job.perfiles?.nombre_completo || 'Usuario desconocido'}
                     </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(job.created_at).toLocaleDateString()}
+                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mt-0.5">
+                      {new Date(job.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
+                  </div>
+                  
+                  {/* Flecha interactiva sutil de la tarjeta */}
+                  <div className="text-gray-300 group-hover:text-blue-500 transition-colors pl-1 shrink-0">
+                    <svg className="w-4 h-4 transform transition-transform group-hover:translate-x-0.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
                 </div>
               </Link>

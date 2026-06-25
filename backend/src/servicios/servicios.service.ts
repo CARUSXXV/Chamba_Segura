@@ -30,7 +30,7 @@ export class ServiciosService {
   async findAll(oficio?: string): Promise<ServicioDetails[]> {
     let query = this.client
       .from('servicios')
-      .select('*, perfiles!trabajador_id(nombre_completo, foto_url)');
+      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)');
 
     if (oficio) {
       query = query.eq('oficio', oficio);
@@ -62,6 +62,8 @@ export class ServiciosService {
       perfiles: {
         nombre_completo: servicio.perfil_nombre_completo,
         foto_url: servicio.perfil_foto_url,
+        rating_promedio: servicio.perfil_rating_promedio,
+        total_calificaciones: servicio.perfil_total_calificaciones,
       },
     })) as unknown as ServicioDetails[];
   }
@@ -69,7 +71,7 @@ export class ServiciosService {
   async findOne(id: string): Promise<ServicioDetails> {
     const { data, error } = await this.client
       .from('servicios')
-      .select('*, perfiles!trabajador_id(nombre_completo, foto_url)')
+      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)')
       .eq('id', id)
       .single();
 
@@ -96,7 +98,7 @@ export class ServiciosService {
     const { data, error } = await this.client
       .from('servicios')
       .insert(insertData as never)
-      .select('*, perfiles!trabajador_id(nombre_completo, foto_url)')
+      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)')
       .single();
 
     if (error) {
@@ -131,7 +133,7 @@ export class ServiciosService {
       .from('servicios')
       .update(updateData as unknown as never)
       .eq('id', id)
-      .select('*, perfiles!trabajador_id(nombre_completo, foto_url)')
+      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)')
       .single();
 
     if (error) throw new InternalServerErrorException(error.message);

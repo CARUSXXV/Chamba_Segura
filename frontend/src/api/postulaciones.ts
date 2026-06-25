@@ -11,6 +11,7 @@ export interface Postulacion {
   created_at: string;
   trabajo?: Job & {
     perfiles?: {
+      id: string;
       nombre_completo?: string;
       foto_url?: string;
       rating_promedio?: number | null;

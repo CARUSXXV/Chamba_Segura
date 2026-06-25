@@ -114,8 +114,8 @@ export default function DashboardContratacionesPage() {
     if (!session?.access_token || !contratacionToRate) return;
     setSubmittingRating(true);
     try {
-      // Sacamos el ID del trabajador ignorando las quejas de TypeScript
-      const trabajadorId = contratacionToRate.servicio?.trabajador_id || (contratacionToRate.servicio?.trabajador as any)?.id;
+      // Sacamos el ID del trabajador
+      const trabajadorId = contratacionToRate.servicio?.trabajador_id || contratacionToRate.servicio?.trabajador?.id;
 
       await createResena(session.access_token, {
         contrataciones_id: contratacionToRate.id,
@@ -170,13 +170,13 @@ export default function DashboardContratacionesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <nav className="bg-white/90 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-40 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 transition-all"
             >
               <svg
                 className="w-5 h-5"
@@ -187,50 +187,50 @@ export default function DashboardContratacionesPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth="2"
+                  strokeWidth="2.5"
                   d="M15 19l-7-7 7-7"
                 />
               </svg>
             </Link>
-            <span className="text-xl">🛡️</span>
-            <span className="text-lg font-black text-blue-600 tracking-tighter">
+            <span className="text-2xl">🛡️</span>
+            <span className="text-xl font-black text-blue-600 tracking-tighter">
               ChambaSegura
             </span>
           </div>
-          <div className="text-sm font-semibold text-gray-600">
-            Panel de Gestión
+          <div className="hidden sm:block text-sm font-bold text-gray-400 uppercase tracking-widest">
+            Gestión
           </div>
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-900">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+        <header className="mb-12">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
             Mis Contrataciones
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 mt-2 text-lg">
             Gestiona el progreso de tus servicios contratados o recibidos.
           </p>
         </header>
 
-        <div className="flex gap-4 border-b border-gray-200 mb-8 overflow-x-auto pb-px">
+        <div className="flex gap-8 border-b border-gray-100 mb-12 overflow-x-auto pb-px scrollbar-hide">
           <button
             onClick={() => setTab("pendientes")}
-            className={`pb-4 px-2 font-bold text-sm transition-all border-b-2 ${tab === "pendientes" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-4 px-1 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${tab === "pendientes" ? "border-blue-600 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
-            Solicitudes y Pendientes
+            Pendientes
           </button>
           <button
             onClick={() => setTab("activos")}
-            className={`pb-4 px-2 font-bold text-sm transition-all border-b-2 ${tab === "activos" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-4 px-1 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${tab === "activos" ? "border-blue-600 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
             En Progreso
           </button>
           <button
             onClick={() => setTab("historial")}
-            className={`pb-4 px-2 font-bold text-sm transition-all border-b-2 ${tab === "historial" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+            className={`pb-4 px-1 font-bold text-sm transition-all border-b-2 whitespace-nowrap ${tab === "historial" ? "border-blue-600 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}
           >
-            Historial Finalizado
+            Historial
           </button>
         </div>
 
@@ -258,27 +258,33 @@ export default function DashboardContratacionesPage() {
             {postulacionesPendientes.map((p) => (
               <div
                 key={`post-${p.id}`}
-                className="bg-white rounded-2xl border border-amber-200 border-l-4 border-l-amber-400 p-6 shadow-sm hover:shadow-md transition-all"
+                className="bg-white rounded-airbnb border border-gray-100 p-8 shadow-sm hover:shadow-airbnb transition-all"
               >
-                <div className="flex flex-wrap justify-between items-start gap-4">
+                <div className="flex flex-wrap justify-between items-start gap-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-700">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100">
                         {p.trabajador_id === user?.id ? "Postulación enviada" : "Solicitud pendiente"}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
                       {p.trabajo?.title || "Trabajo"}
                     </h3>
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <p>📅 {new Date(p.created_at).toLocaleDateString()}</p>
+                    <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
+                      <p className="flex items-center gap-2">
+                        <span className="text-lg">📅</span>
+                        {new Date(p.created_at).toLocaleDateString()}
+                      </p>
                       {p.trabajo?.budget ? (
-                        <p>💰 <span className="font-bold text-gray-900">${p.trabajo.budget}</span></p>
+                        <p className="flex items-center gap-2">
+                          <span className="text-lg">💰</span>
+                          <span className="font-bold text-gray-900">${p.trabajo.budget}</span>
+                        </p>
                       ) : null}
                     </div>
-                    <div className="mt-4 flex items-start gap-3">
+                    <div className="mt-8 flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                       {/* Avatar Dinámico */}
-                      <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                      <div className="w-12 h-12 flex-shrink-0 bg-white rounded-xl shadow-sm flex items-center justify-center text-lg font-bold text-blue-600 border border-gray-100">
                         {p.trabajador_id === user?.id
                           ? p.trabajo?.perfiles?.nombre_completo?.charAt(0) || "U"
                           : p.trabajador?.nombre_completo?.charAt(0) || "U"}
@@ -286,13 +292,13 @@ export default function DashboardContratacionesPage() {
 
                       {/* Nombre Clickeable y Estrellas */}
                       <div className="flex flex-col">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-bold text-gray-900">
                           {p.trabajador_id === user?.id ? (
                             <>
                               Contratante:{" "}
                               <Link
-                                href={`/perfil/${(p.trabajo?.perfiles as any)?.id || ""}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                href={`/perfil/${p.trabajo?.perfiles?.id || ""}`}
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
                               >
                                 {p.trabajo?.perfiles?.nombre_completo || "Desconocido"}
                               </Link>
@@ -302,7 +308,7 @@ export default function DashboardContratacionesPage() {
                               Trabajador:{" "}
                               <Link
                                 href={`/perfil/${p.trabajador_id}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
                               >
                                 {p.trabajador?.nombre_completo || "Desconocido"}
                               </Link>
@@ -310,22 +316,22 @@ export default function DashboardContratacionesPage() {
                           )}
                         </p>
 
-                        <div className="mt-0.5 scale-90 origin-left">
+                        <div className="mt-1">
                           <EstrellasUsuario
-                            usuarioId={p.trabajador_id === user?.id ? ((p.trabajo?.perfiles as any)?.id || "") : p.trabajador_id}
+                            usuarioId={p.trabajador_id === user?.id ? (p.trabajo?.perfiles?.id || "") : p.trabajador_id}
                             token={session?.access_token || ""}
                           />
                         </div>
                       </div>
                     </div>
                     {p.trabajador_id !== user?.id && p.mensaje && (
-                      <p className="mt-2 text-sm text-gray-500 italic line-clamp-2">
-                        "{p.mensaje}"
+                      <p className="mt-4 text-sm text-gray-500 italic leading-relaxed">
+                        &quot;{p.mensaje}&quot;
                       </p>
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 min-w-37.5">
+                  <div className="flex flex-col gap-3 min-w-48">
                     {p.trabajador_id !== user?.id ? (
                       <>
                         <button
@@ -339,7 +345,7 @@ export default function DashboardContratacionesPage() {
                               alert(err instanceof Error ? err.message : "Error al aceptar");
                             }
                           }}
-                          className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700"
+                          className="w-full py-3 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-colors"
                         >
                           Aceptar
                         </button>
@@ -354,14 +360,21 @@ export default function DashboardContratacionesPage() {
                               alert(err instanceof Error ? err.message : "Error al rechazar");
                             }
                           }}
-                          className="w-full py-2 border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-50"
+                          className="w-full py-3 border border-gray-200 text-gray-900 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
                         >
                           Rechazar
                         </button>
                       </>
                     ) : (
-                      <div className="text-xs text-gray-400 text-center py-2">
-                        Esperando respuesta del contratante
+                      <div className="bg-gray-50 rounded-xl p-4 text-center">
+                        <div className="animate-pulse flex justify-center mb-2">
+                           <div className="w-2 h-2 bg-amber-400 rounded-full mx-0.5" />
+                           <div className="w-2 h-2 bg-amber-400 rounded-full mx-0.5" />
+                           <div className="w-2 h-2 bg-amber-400 rounded-full mx-0.5" />
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-tighter text-gray-400">
+                          Enviada
+                        </p>
                       </div>
                     )}
                   </div>
@@ -373,61 +386,64 @@ export default function DashboardContratacionesPage() {
             {filteredContrataciones.map((c) => (
               <div
                 key={c.id}
-                className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all"
+                className="bg-white rounded-airbnb border border-gray-100 p-8 shadow-sm hover:shadow-airbnb transition-all"
               >
-                <div className="flex flex-wrap justify-between items-start gap-4">
+                <div className="flex flex-wrap justify-between items-start gap-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-4">
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest ${c.estado_contrato ===
+                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${c.estado_contrato ===
                           EstadoContratacion.SOLICITUD_PENDIENTE
-                          ? "bg-amber-100 text-amber-700"
+                          ? "bg-amber-50 text-amber-600 border-amber-100"
                           : c.estado_contrato ===
                             EstadoContratacion.PENDIENTE_FIRMA
-                            ? "bg-purple-100 text-purple-700"
+                            ? "bg-purple-50 text-purple-600 border-purple-100"
                             : c.estado_contrato ===
                               EstadoContratacion.ACEPTADO
-                              ? "bg-blue-100 text-blue-700"
+                              ? "bg-blue-50 text-blue-600 border-blue-100"
                               : c.estado_contrato ===
                                 EstadoContratacion.EN_PROGRESO
-                                ? "bg-green-100 text-green-700"
+                                ? "bg-green-50 text-green-600 border-green-100"
                                 : c.estado_contrato ===
                                   EstadoContratacion.COMPLETADO
-                                  ? "bg-gray-100 text-gray-700"
-                                  : "bg-red-100 text-red-700"
+                                  ? "bg-gray-50 text-gray-600 border-gray-100"
+                                  : "bg-red-50 text-red-600 border-red-100"
                           }`}
                       >
                         {c.estado_contrato.replace("_", " ")}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
                         ID: {c.id.split("-")[0]}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
                       {c.trabajo?.title || c.servicio?.oficio || "Servicio Personalizado"}
                     </h3>
                     {c.trabajo?.title && c.servicio?.oficio && c.trabajo.title !== c.servicio.oficio && (
-                      <p className="text-xs text-gray-400 mb-1">
-                        Servicio: {c.servicio.oficio}
+                      <p className="text-xs font-semibold text-gray-400 mb-2">
+                        CATEGORÍA: {c.servicio.oficio.toUpperCase()}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <p>📅 {new Date(c.fecha_calendario).toLocaleString()}</p>
-                      <p>
-                        💰{" "}
+                    <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
+                      <p className="flex items-center gap-2">
+                        <span className="text-lg">📅</span>
+                        {new Date(c.fecha_calendario).toLocaleString()}
+                      </p>
+                      <p className="flex items-center gap-2">
+                        <span className="text-lg">💰</span>
                         <span className="font-bold text-gray-900">
                           ${c.precio_final}
                         </span>
                       </p>
                     </div>
                     {c.trabajo?.description && (
-                      <p className="mt-2 text-sm text-gray-500 line-clamp-2">
+                      <p className="mt-4 text-sm text-gray-500 leading-relaxed line-clamp-2">
                         {c.trabajo.description}
                       </p>
                     )}
-                    <div className="mt-4 flex items-start gap-3">
+                    <div className="mt-8 flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                       {/* Avatar Dinámico */}
-                      <div className="w-8 h-8 flex-shrink-0 bg-blue-50 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                      <div className="w-12 h-12 flex-shrink-0 bg-white rounded-xl shadow-sm flex items-center justify-center text-lg font-bold text-blue-600 border border-gray-100">
                         {c.cliente_id === user?.id
                           ? c.servicio?.trabajador?.nombre_completo?.charAt(0) || "U"
                           : c.cliente?.nombre_completo?.charAt(0) || "U"}
@@ -435,13 +451,13 @@ export default function DashboardContratacionesPage() {
 
                       {/* Nombre Clickeable y Estrellas */}
                       <div className="flex flex-col">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-bold text-gray-900">
                           {c.cliente_id === user?.id ? (
                             <>
                               Trabajador:{" "}
                               <Link
-                                href={`/perfil/${c.servicio?.trabajador_id || (c.servicio?.trabajador as any)?.id || ""}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                href={`/perfil/${c.servicio?.trabajador_id || c.servicio?.trabajador?.id || ""}`}
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
                               >
                                 {c.servicio?.trabajador?.nombre_completo || "Desconocido"}
                               </Link>
@@ -451,7 +467,7 @@ export default function DashboardContratacionesPage() {
                               Cliente:{" "}
                               <Link
                                 href={`/perfil/${c.cliente_id}`}
-                                className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                className="text-blue-600 hover:text-blue-800 transition-colors"
                               >
                                 {c.cliente?.nombre_completo || "Desconocido"}
                               </Link>
@@ -459,9 +475,9 @@ export default function DashboardContratacionesPage() {
                           )}
                         </p>
 
-                        <div className="mt-0.5 scale-90 origin-left">
+                        <div className="mt-1">
                           <EstrellasUsuario
-                            usuarioId={c.cliente_id === user?.id ? (c.servicio?.trabajador_id || (c.servicio?.trabajador as any)?.id || "") : c.cliente_id}
+                            usuarioId={c.cliente_id === user?.id ? (c.servicio?.trabajador_id || c.servicio?.trabajador?.id || "") : c.cliente_id}
                             token={session?.access_token || ""}
                           />
                         </div>
@@ -469,7 +485,7 @@ export default function DashboardContratacionesPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 min-w-37.5">
+                  <div className="flex flex-col gap-3 min-w-48">
                     {/* Acciones como trabajador de la contratación */}
                     {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato ===
@@ -482,7 +498,7 @@ export default function DashboardContratacionesPage() {
                                 EstadoContratacion.ACEPTADO,
                               )
                             }
-                            className="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700"
+                            className="w-full py-3 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-black transition-colors"
                           >
                             Aceptar Chamba
                           </button>
@@ -493,7 +509,7 @@ export default function DashboardContratacionesPage() {
                                 EstadoContratacion.CANCELADO,
                               )
                             }
-                            className="w-full py-2 border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-50"
+                            className="w-full py-3 border border-gray-200 text-gray-900 text-sm font-bold rounded-xl hover:bg-gray-50 transition-colors"
                           >
                             Rechazar
                           </button>
@@ -508,7 +524,7 @@ export default function DashboardContratacionesPage() {
                               EstadoContratacion.EN_PROGRESO,
                             )
                           }
-                          className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700"
+                          className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors"
                         >
                           Iniciar Trabajo
                         </button>
@@ -522,7 +538,7 @@ export default function DashboardContratacionesPage() {
                               EstadoContratacion.COMPLETADO,
                             )
                           }
-                          className="w-full py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700"
+                          className="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors"
                         >
                           Marcar como Terminado
                         </button>
@@ -534,7 +550,7 @@ export default function DashboardContratacionesPage() {
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO) && (
                         <button
                           onClick={() => handleOpenChat(c)}
-                          className="w-full py-2 bg-blue-100 text-blue-700 text-sm font-bold rounded-lg hover:bg-blue-200"
+                          className="w-full py-3 bg-gray-100 text-gray-900 text-sm font-bold rounded-xl hover:bg-gray-200 transition-colors"
                         >
                           💬 Abrir Chat
                         </button>
@@ -546,7 +562,7 @@ export default function DashboardContratacionesPage() {
                       EstadoContratacion.PENDIENTE_FIRMA && (
                         <button
                           onClick={() => handleSimulateUpload(c.id)}
-                          className="w-full py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600"
+                          className="w-full py-3 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-colors"
                         >
                           Firmar Contrato (Simular)
                         </button>
@@ -564,7 +580,7 @@ export default function DashboardContratacionesPage() {
                             }
                             handleUpdateEstado(c.id, EstadoContratacion.CANCELADO);
                           }}
-                          className="w-full py-2 border border-red-200 text-red-600 text-sm font-bold rounded-lg hover:bg-red-50"
+                          className="w-full py-3 border border-red-200 text-red-600 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors"
                         >
                           Cancelar Trabajo
                         </button>
@@ -578,7 +594,7 @@ export default function DashboardContratacionesPage() {
                               EstadoContratacion.COMPLETADO,
                             )
                           }
-                          className="w-full py-2 border border-blue-200 text-blue-600 text-sm font-bold rounded-lg hover:bg-blue-50"
+                          className="w-full py-3 border border-blue-200 text-blue-600 text-sm font-bold rounded-xl hover:bg-blue-50 transition-colors"
                         >
                           Validar Finalización
                         </button>
@@ -589,7 +605,7 @@ export default function DashboardContratacionesPage() {
                       (!c.resenas || c.resenas.length === 0) && (
                         <button
                           onClick={() => handleOpenRating(c)}
-                          className="w-full py-2 bg-yellow-500 text-white text-sm font-bold rounded-lg hover:bg-yellow-600 shadow-sm"
+                          className="w-full py-3 bg-yellow-400 text-white text-sm font-bold rounded-xl hover:bg-yellow-500 transition-colors shadow-sm"
                         >
                           ⭐ Calificar Trabajador
                         </button>
@@ -598,7 +614,7 @@ export default function DashboardContratacionesPage() {
                     {c.cliente_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.COMPLETADO &&
                       c.resenas && c.resenas.length > 0 && (
-                        <div className="w-full py-2 bg-gray-50 border border-gray-200 text-gray-500 text-sm font-bold rounded-lg text-center">
+                        <div className="w-full py-3 bg-gray-50 border border-gray-100 text-gray-400 text-xs font-black uppercase tracking-widest rounded-xl text-center">
                           Reseña enviada: {c.resenas[0].calificacion} ⭐
                         </div>
                       )}
@@ -607,7 +623,7 @@ export default function DashboardContratacionesPage() {
                       <a
                         href={c.documento_contrato_url}
                         target="_blank"
-                        className="text-xs text-blue-600 hover:underline text-center block mt-2"
+                        className="text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors text-center block mt-2"
                       >
                         Ver Contrato 📄
                       </a>

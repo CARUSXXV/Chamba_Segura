@@ -20,7 +20,7 @@ const CATEGORIES = [
 
 export default function NuevoTrabajoPage() {
   const { user, session, isLoading: authLoading } = useAuth();
-  const { location, error: geoError, loading: geoLoading } = useGeolocation();
+  const { location, error: geoError } = useGeolocation();
   const router = useRouter();
 
   const [formData, setFormData] = useState<Partial<JobPayload>>({
@@ -91,145 +91,200 @@ export default function NuevoTrabajoPage() {
 
   if (authLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      <div className="flex min-h-screen items-center justify-center bg-gray-50/50 backdrop-blur-xs">
+        <div className="relative w-10 h-10">
+          <div className="absolute inset-0 border-4 border-gray-200 rounded-full" />
+          <div className="absolute inset-0 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 text-gray-900 antialiased selection:bg-blue-100 selection:text-blue-900">
       <div className="max-w-2xl mx-auto">
+        
+        {/* Enlace de regreso */}
         <Link 
           href="/trabajos"
-          className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 mb-8 transition-colors"
+          className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gray-800 mb-8 transition-colors group cursor-pointer"
         >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2 transform transition-transform group-hover:-translate-x-0.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
           </svg>
           Volver a trabajos
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Contenedor del Formulario */}
+        <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs overflow-hidden">
+          
+          {/* Encabezado */}
           <div className="px-8 py-6 border-b border-gray-100 bg-gray-50/50">
-            <h1 className="text-2xl font-bold text-gray-900">Publicar Nuevo Trabajo</h1>
-            <p className="text-gray-500 text-sm mt-1">Describe lo que necesitas y conecta con profesionales.</p>
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">Publicar Nuevo Trabajo</h1>
+            <p className="text-gray-500 text-sm mt-1 leading-relaxed">
+              Describe claramente el requerimiento para que los profesionales calificados puedan postularse.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            
+            {/* Alertas de Estado */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm">
-                {error}
+              <div className="bg-red-50/70 border border-red-200 text-red-700 p-4 rounded-xl text-sm flex items-start gap-2.5">
+                <span className="text-base select-none mt-0.5">⚠️</span>
+                <div>
+                  <span className="font-bold">Error al guardar:</span> {error}
+                </div>
               </div>
             )}
 
             {geoError && (
-              <div className="bg-amber-50 border-l-4 border-amber-500 text-amber-700 p-4 rounded-md text-sm">
-                <span className="font-bold">Aviso de ubicación:</span> {geoError}. 
-                El trabajo se publicará sin ubicación exacta.
+              <div className="bg-amber-50/70 border border-amber-200 text-amber-800 p-4 rounded-xl text-sm flex items-start gap-2.5">
+                <span className="text-base select-none mt-0.5">📍</span>
+                <div>
+                  <span className="font-bold">Aviso de ubicación:</span> {geoError}. Tu solicitud se listará con alcance general sin una posición geográfica exacta.
+                </div>
               </div>
             )}
 
             {location && (
-              <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-md text-sm flex justify-between items-center">
-                <span>
-                  <span className="font-bold">Ubicación detectada:</span> Tu trabajo será visible para personas cerca de ti.
-                </span>
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              <div className="bg-emerald-50/60 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-sm flex justify-between items-center gap-4">
+                <div className="flex items-start gap-2.5">
+                  <span className="text-base select-none mt-0.5">✨</span>
+                  <span>
+                    <span className="font-bold">Ubicación vinculada:</span> El trabajo se geolocalizará de forma automática para conectar de inmediato con profesionales de tu zona.
+                  </span>
+                </div>
+                <svg className="w-5 h-5 text-emerald-600 shrink-0 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             )}
 
+            {/* Título del Trabajo */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Título del trabajo *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Título del requerimiento *</label>
               <input 
                 type="text"
                 required
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="Ej: Reparación de tubería en cocina"
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-sm placeholder:text-gray-400"
+                placeholder="Ej: Reparación urgente de tubería principal en cocina"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
 
+            {/* Descripción */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Descripción detallada *</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Descripción detallada *</label>
               <textarea 
                 required
                 rows={4}
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none"
-                placeholder="Explica detalladamente qué necesitas hacer..."
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-sm placeholder:text-gray-400 resize-none leading-relaxed"
+                placeholder="Especifica claramente el problema, materiales disponibles, urgencia y cualquier detalle técnico relevante para el profesional..."
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
 
+            {/* Fila Doble: Categoría y Presupuesto */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Selector de Categorías */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Categoría *</label>
-                <select 
-                  required
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Categoría *</label>
+                <div className="relative">
+                  <select 
+                    required
+                    className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer font-medium text-sm"
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                  >
+                    <option value="" className="text-gray-400">Selecciona el rubro</option>
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat} className="text-gray-900">{cat}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-4 h-4 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
               </div>
+
+              {/* Presupuesto */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Presupuesto Estimado ($)</label>
-                <input 
-                  type="number"
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Ej: 50"
-                  value={formData.budget || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value ? Number(e.target.value) : undefined }))}
-                />
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Presupuesto Estimado ($)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-4 flex items-center text-gray-400 font-semibold text-sm pointer-events-none select-none">
+                    $
+                  </span>
+                  <input 
+                    type="number"
+                    className="w-full pl-8 pr-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-bold text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    placeholder="Opcional (Ej: 45)"
+                    value={formData.budget || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value ? Number(e.target.value) : undefined }))}
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Sección de Habilidades (Tags) */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Habilidades requeridas (Opcional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-1">
+                Habilidades requeridas (Opcional)
+              </label>
+              <p className="text-xs text-gray-400 mb-2.5">
+                Escribe un término y presiona <kbd className="px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-gray-500 font-sans font-semibold">Enter</kbd> para fijarlo como requisito.
+              </p>
               <input 
                 type="text"
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="Ej: Soldadura, PVC... (Presiona Enter)"
+                className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-sm placeholder:text-gray-400"
+                placeholder="Ej: Soldadura de estaño, Termofusión, PVC..."
                 value={skillInput}
                 onChange={(e) => setSkillInput(e.target.value)}
                 onKeyDown={handleAddSkill}
               />
-              <div className="flex flex-wrap gap-2 mt-3">
-                {formData.required_skills?.map(skill => (
-                  <span key={skill} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-100">
-                    {skill}
-                    <button type="button" onClick={() => removeSkill(skill)} className="hover:text-blue-900">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </button>
-                  </span>
-                ))}
-              </div>
+              
+              {/* Contenedor Flex Wrap de Skills */}
+              {formData.required_skills && formData.required_skills.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3 p-3 bg-gray-50/50 border border-gray-100 rounded-xl">
+                  {formData.required_skills.map(skill => (
+                    <span 
+                      key={skill} 
+                      className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold rounded-lg transition-all hover:bg-blue-100/70"
+                    >
+                      {skill}
+                      <button 
+                        type="button" 
+                        onClick={() => removeSkill(skill)} 
+                        className="p-0.5 rounded-md hover:bg-blue-200 hover:text-blue-900 transition-colors cursor-pointer"
+                        title={`Eliminar ${skill}`}
+                      >
+                        <svg className="w-3 h-3 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {/* Botón de Envío */}
             <div className="pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl text-base font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-md disabled:opacity-50"
+                className="w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-98 shadow-blue-500/10"
               >
                 {loading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Publicando...
-                  </>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Publicando orden...</span>
+                  </div>
                 ) : (
                   'Publicar Trabajo'
                 )}

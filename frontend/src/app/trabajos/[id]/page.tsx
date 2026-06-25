@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { fetchJobById, deleteJob, Job } from '@/api/jobs';
 import { createPostulacion, fetchPostulacionesByJob, updateEstadoPostulacion, Postulacion } from '@/api/postulaciones';
 import ConfirmModal from '@/app/components/ConfirmModal';
+import EstrellasUsuario from '@/app/components/EstrellasUsuarios';
 import Link from 'next/link';
 import { parseUbicacion, buildMapSrcDoc } from '@/utils/mapUtils';
 
@@ -169,7 +170,9 @@ export default function DetalleTrabajoPage() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-tight">Contratante</p>
-                  <p className="text-sm font-bold text-gray-900">{job.perfiles?.nombre_completo || 'Usuario desconocido'}</p>
+                  <Link href={`/perfil/${job.contractor_id}`} className="text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                    {job.perfiles?.nombre_completo || 'Usuario desconocido'}
+                  </Link>
                 </div>
               </div>
               <div className="h-10 w-px bg-gray-200" />
@@ -270,9 +273,18 @@ export default function DetalleTrabajoPage() {
                           {p.trabajador?.nombre_completo?.charAt(0) || '?'}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-gray-900 truncate">
+                          <Link
+                            href={`/perfil/${p.trabajador_id}`}
+                            className="font-bold text-blue-600 hover:text-blue-800 transition-colors truncate block"
+                          >
                             {p.trabajador?.nombre_completo || 'Trabajador'}
-                          </p>
+                          </Link>
+                          <div className="mt-0.5">
+                            <EstrellasUsuario
+                              usuarioId={p.trabajador_id}
+                              token={session?.access_token || ""}
+                            />
+                          </div>
                           {p.mensaje && (
                             <p className="text-sm text-gray-500 mt-1 line-clamp-2">{p.mensaje}</p>
                           )}
