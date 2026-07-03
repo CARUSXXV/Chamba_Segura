@@ -39,6 +39,11 @@ export class ContratacionesController {
     return this.contratacionesService.findByUserId(req.user.id);
   }
 
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Request() req: RequestWithUser) {
+    return this.contratacionesService.findOne(id, req.user.id);
+  }
+
   @Patch(':id/estado')
   async updateEstado(
     @Param('id') id: string,

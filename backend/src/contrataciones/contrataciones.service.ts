@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { ServiciosService } from '../servicios/servicios.service';
+import { PaymentsService } from '../payments/payments.service';
 import type {
   ContratacionesRow,
   ContratacionesWithRelations,
@@ -33,6 +34,7 @@ export class ContratacionesService {
   constructor(
     private readonly supabaseService: SupabaseService,
     private readonly serviciosService: ServiciosService,
+    private readonly paymentsService: PaymentsService,
   ) { }
 
   private get client() {
@@ -147,11 +149,19 @@ export class ContratacionesService {
       const allowedWorkerStates = [
         EstadoContratacion.ACEPTADO,
         EstadoContratacion.EN_PROGRESO,
-        EstadoContratacion.COMPLETADO,
         EstadoContratacion.CANCELADO,
       ];
       if (!allowedWorkerStates.includes(nuevoEstado)) {
         throw new BadRequestException('Estado no permitido para trabajador');
+      }
+
+      if (nuevoEstado === EstadoContratacion.EN_PROGRESO) {
+        const hasHeldPayment = await this.checkHasHeldPayment(id);
+        if (!hasHeldPayment) {
+          throw new BadRequestException(
+            'No se puede iniciar el trabajo: el cliente aún no ha realizado el pago en garantía',
+          );
+        }
       }
     } else {
       if (nuevoEstado === EstadoContratacion.CANCELADO) {
@@ -164,14 +174,35 @@ export class ContratacionesService {
             `[NOTIFICACIÓN] El cliente ${userId} canceló la contratación ${id} (estado: ${contratacion.estado_contrato}). Notificando al trabajador ${contratacion.servicio?.trabajador_id}.`,
           );
         }
+        // Escrow: refund if there's a held payment
+        try {
+          await this.paymentsService.refundPayment(id);
+        } catch {
+          // No held payment or already refunded - nothing to do
+        }
       } else if (nuevoEstado === EstadoContratacion.COMPLETADO) {
         if (contratacion.estado_contrato !== EstadoContratacion.EN_PROGRESO) {
           throw new BadRequestException(
             'Solo puedes marcar como completado si estaba en progreso',
           );
         }
+        // Escrow: client confirmed completion → release payment to worker
+        try {
+          await this.paymentsService.releasePayment(id);
+        } catch {
+          // No held payment - might be a free service or already processed
+        }
       } else {
         throw new BadRequestException('Estado no permitido para cliente');
+      }
+    }
+
+    // Worker cancelling also triggers refund
+    if (isWorker && nuevoEstado === EstadoContratacion.CANCELADO) {
+      try {
+        await this.paymentsService.refundPayment(id);
+      } catch {
+        // No held payment - nothing to do
       }
     }
 
@@ -184,6 +215,35 @@ export class ContratacionesService {
 
     if (error) throw new InternalServerErrorException(error.message);
     return (data ?? null) as unknown as ContratacionesWithRelations | null;
+  }
+
+  async findOne(
+    id: string,
+    userId: string,
+  ): Promise<ContratacionesWithRelations> {
+    const { data, error } = await this.client
+      .from('contrataciones')
+      .select(
+        '*, servicio:servicios(*, trabajador:perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)), cliente:perfiles!cliente_id(nombre_completo), trabajo:jobs!job_id(title, description), resenas(*)',
+      )
+      .eq('id', id)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException('Contratación no encontrada');
+    }
+
+    const contratacion = data as unknown as ContratacionesWithRelations;
+    const isWorker = contratacion.servicio?.trabajador_id === userId;
+    const isClient = contratacion.cliente_id === userId;
+
+    if (!isWorker && !isClient) {
+      throw new ForbiddenException(
+        'No tienes permiso para ver esta contratación',
+      );
+    }
+
+    return contratacion;
   }
 
   async uploadDocumento(
@@ -221,5 +281,14 @@ export class ContratacionesService {
 
     if (error) throw new InternalServerErrorException(error.message);
     return (data ?? null) as unknown as ContratacionesWithRelations | null;
+  }
+
+  private async checkHasHeldPayment(contratacionId: string): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('fake_transactions')
+      .select('status')
+      .eq('contrataciones_id', contratacionId)
+      .eq('status', 'HELD');
+    return !error && data && data.length > 0;
   }
 }

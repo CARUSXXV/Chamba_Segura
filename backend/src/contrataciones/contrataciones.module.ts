@@ -3,9 +3,10 @@ import { ContratacionesController } from './contrataciones.controller';
 import { ContratacionesService } from './contrataciones.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { ServiciosModule } from '../servicios/servicios.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-  imports: [SupabaseModule, ServiciosModule],
+  imports: [SupabaseModule, ServiciosModule, PaymentsModule],
   controllers: [ContratacionesController],
   providers: [ContratacionesService],
 })

@@ -93,3 +93,12 @@ export async function uploadDocumentoContrato(token: string, id: string, url: st
   if (!response.ok) throw new Error('Error al subir documento');
   return response.json();
 }
+
+export async function fetchContratacion(token: string, id: string): Promise<Contratacion> {
+  const response = await fetch(`${CONTRATACIONES_URL}/${id}`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+    cache: 'no-store',
+  });
+  if (!response.ok) throw new Error('Error al obtener contratación');
+  return response.json();
+}

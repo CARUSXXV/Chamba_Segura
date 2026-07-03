@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get('sb-access-token');
   const { pathname } = request.nextUrl;
 
-  const isPublicPath = pathname.startsWith('/auth') || pathname === '/';
+  const isPublicPath = pathname.startsWith('/auth') || pathname === '/' || pathname.startsWith('/pago');
 
   if (!isPublicPath && !session) {
     return NextResponse.redirect(new URL('/auth/login', request.url));

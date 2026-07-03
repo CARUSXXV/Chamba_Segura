@@ -13,6 +13,7 @@ import { ServiciosModule } from './servicios/servicios.module';
 import { ContratacionesModule } from './contrataciones/contrataciones.module';
 import { PostulacionesModule } from './postulaciones/postulaciones.module';
 import { ResenasModule } from './resenas/resenas.module';
+import { PaymentsModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ResenasModule } from './resenas/resenas.module';
     ContratacionesModule,
     PostulacionesModule,
     ResenasModule,
+    PaymentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

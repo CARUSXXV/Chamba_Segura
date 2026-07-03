@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   fetchContrataciones,
   updateEstadoContratacion,
@@ -17,9 +17,11 @@ import { createChat } from "@/api/chats";
 import { createResena } from "@/api/resenas";
 import Link from "next/link";
 
-export default function DashboardContratacionesPage() {
+function DashboardContratacionesContent() {
   const { user, session, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [showSuccess, setShowSuccess] = useState(searchParams.get('pago') === 'exitoso');
 
   const [contrataciones, setContrataciones] = useState<Contratacion[]>([]);
   const [postulaciones, setPostulaciones] = useState<Postulacion[]>([]);
@@ -233,6 +235,14 @@ export default function DashboardContratacionesPage() {
             Historial
           </button>
         </div>
+
+        {showSuccess && (
+          <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700 flex items-center gap-3">
+            <span className="text-xl">✅</span>
+            <span>Pago exitoso — el monto está retenido en garantía. El trabajador ya puede comenzar.</span>
+            <button onClick={() => setShowSuccess(false)} className="ml-auto text-green-500 hover:text-green-700 font-bold">✕</button>
+          </div>
+        )}
 
         {error ? (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -517,31 +527,15 @@ export default function DashboardContratacionesPage() {
                       )}
                     {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.ACEPTADO && (
-                        <button
-                          onClick={() =>
-                            handleUpdateEstado(
-                              c.id,
-                              EstadoContratacion.EN_PROGRESO,
-                            )
-                          }
-                          className="w-full py-3 bg-green-600 text-white text-sm font-bold rounded-xl hover:bg-green-700 transition-colors"
-                        >
-                          Iniciar Trabajo
-                        </button>
+                        <div className="w-full py-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-wider rounded-xl text-center">
+                          ⌛ Esperando pago del cliente
+                        </div>
                       )}
                     {c.servicio?.trabajador_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO && (
-                        <button
-                          onClick={() =>
-                            handleUpdateEstado(
-                              c.id,
-                              EstadoContratacion.COMPLETADO,
-                            )
-                          }
-                          className="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors"
-                        >
-                          Marcar como Terminado
-                        </button>
+                        <div className="w-full py-3 bg-green-50 border border-green-200 text-green-700 text-xs font-bold uppercase tracking-wider rounded-xl text-center">
+                          🛠️ Trabajo en progreso
+                        </div>
                       )}
 
                     {/* Chat para cualquier participante en estados activos o pendientes */}
@@ -584,6 +578,15 @@ export default function DashboardContratacionesPage() {
                         >
                           Cancelar Trabajo
                         </button>
+                      )}
+                    {c.cliente_id === user?.id &&
+                      c.estado_contrato === EstadoContratacion.ACEPTADO && (
+                        <Link
+                          href={`/pago?contratacion_id=${c.id}`}
+                          className="w-full py-3 bg-green-600 text-white text-center text-sm font-bold rounded-xl hover:bg-green-700 transition-colors block"
+                        >
+                          Pagar Ahora — ${c.precio_final}
+                        </Link>
                       )}
                     {c.cliente_id === user?.id &&
                       c.estado_contrato === EstadoContratacion.EN_PROGRESO && (
@@ -685,5 +688,17 @@ export default function DashboardContratacionesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardContratacionesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <DashboardContratacionesContent />
+    </Suspense>
   );
 }

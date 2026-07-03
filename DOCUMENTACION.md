@@ -91,6 +91,13 @@ PENDIENTE_FIRMA ──> SOLICITUD_PENDIENTE ──> ACEPTADO ──> EN_PROGRESO
 - Seguimiento del estado del contrato en tiempo real.
 - Historial completo de contrataciones.
 
+### 💳 Pasarela de Pagos Simulados y Escrow (Garantía)
+El flujo de pagos asegura la integridad y retención de fondos mediante un mecanismo de Escrow simulado:
+- **Pago en Garantía (Hold)**: Al aceptar una propuesta de trabajo (estado `ACEPTADO`), el cliente es dirigido a la pasarela de pago simulada `/pago?contratacion_id=...`. Esta vista obtiene dinámicamente el precio final real de la contratación. Al procesar el pago, se asocia directamente el `contratacion_id` y se guarda la transacción con estado `HELD` (retención en garantía) en la base de datos de manera atómica, moviendo el contrato automáticamente a `EN_PROGRESO`.
+- **Restricción de Inicio de Trabajo**: El trabajador no puede iniciar el trabajo manualmente en el panel a menos que exista un pago en estado `HELD` realizado por el cliente.
+- **Confirmación y Liberación (Release)**: El trabajador realiza la labor pero no puede marcar la contratación como `COMPLETADO`. Solo el cliente, al verificar la calidad del trabajo, puede hacer click en "Validar Finalización", lo cual cambia el estado del contrato a `COMPLETADO` y libera los fondos al técnico de forma segura (actualizando el estado del pago a `RELEASED`).
+- **Cancelaciones y Reembolsos (Refund)**: Si cualquiera de las partes cancela la contratación en un estado válido (mientras el pago esté en garantía `HELD`), el backend procesa automáticamente un reembolso, actualizando la transacción a `REFUNDED`.
+
 ### Panel de Control (Dashboard)
 - Vista general con saludo personalizado según la hora del día.
 - Estadísticas del usuario (con placeholders para datos reales).

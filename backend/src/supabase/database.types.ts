@@ -132,21 +132,75 @@ export interface MensajesRow {
     enviado_el: string;
 }
 
+export interface FakeTransactionsRow {
+    id: string;
+    amount: number;
+    currency: string;
+    status: string;
+    error_code: string | null;
+    description: string | null;
+    reference: string | null;
+    last_four: string;
+    card_brand: string | null;
+    full_name: string;
+    contrataciones_id: string | null;
+    created_at: string;
+}
+
 export interface Database {
     public: {
         Tables: {
-            Update: Partial<MensajesRow>;
-            Relationships: [];
+            profiles: {
+                Row: ProfilesRow;
+                Insert: Partial<ProfilesRow>;
+                Update: Partial<ProfilesRow>;
+                Relationships: [];
+            };
+            servicios: {
+                Row: ServiciosRow;
+                Insert: Partial<ServiciosRow>;
+                Update: Partial<ServiciosRow>;
+                Relationships: [];
+            };
+            contrataciones: {
+                Row: ContratacionesRow;
+                Insert: Partial<ContratacionesRow>;
+                Update: Partial<ContratacionesRow>;
+                Relationships: [];
+            };
+            jobs: {
+                Row: JobsRow;
+                Insert: Partial<JobsRow>;
+                Update: Partial<JobsRow>;
+                Relationships: [];
+            };
+            resenas: {
+                Row: ResenasRow;
+                Insert: Partial<ResenasRow> &
+                Pick<ResenasRow, 'id' | 'contrataciones_id' | 'calificacion' | 'comentario' | 'afecta_racha' | 'evaluador_id' | 'evaluado_id'>;
+                Update: Partial<ResenasRow>;
+                Relationships: [];
+            };
+            chats: {
+                Row: ChatsRow;
+                Insert: Partial<ChatsRow>;
+                Update: Partial<ChatsRow>;
+                Relationships: [];
+            };
+            mensajes: {
+                Row: MensajesRow;
+                Insert: Partial<MensajesRow>;
+                Update: Partial<MensajesRow>;
+                Relationships: [];
+            };
+            fake_transactions: {
+                Row: FakeTransactionsRow;
+                Insert: Partial<FakeTransactionsRow>;
+                Update: Partial<FakeTransactionsRow>;
+                Relationships: [];
+            };
         };
-        resenas: {
-            Row: ResenasRow;
-            Insert: Partial<ResenasRow> &
-            Pick<ResenasRow, 'id' | 'contrataciones_id' | 'calificacion' | 'comentario' | 'afecta_racha' | 'evaluador_id' | 'evaluado_id'>;
-            Update: Partial<ResenasRow>;
-            Relationships: [];
-        };
+        Views: Record<string, never>;
+        Functions: Record<string, never>;
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
 };
