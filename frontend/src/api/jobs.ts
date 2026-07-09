@@ -6,6 +6,9 @@ export interface Job {
   required_skills: string[];
   budget: number | null;
   contractor_id: string;
+  fotos_urls: string[];
+  latitude?: number | null;
+  longitude?: number | null;
   created_at: string;
   distancia_metros?: number | null;
   ubicacion?: {
@@ -30,6 +33,7 @@ export interface JobPayload {
   contractor_id: string;
   latitude?: number;
   longitude?: number;
+  fotos_urls?: string[];
 }
 
 export interface JobFilter {

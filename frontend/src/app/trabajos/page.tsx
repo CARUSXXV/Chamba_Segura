@@ -7,6 +7,7 @@ import { fetchJobs, Job, JobFilter } from '@/api/jobs';
 import Link from 'next/link';
 import { useGeolocation } from '@/utils/useGeolocation';
 import { getFromCache, setInCache, buildCacheKey } from '@/utils/cache';
+import { getCategoryImage } from '@/app/lib/categoryImages';
 
 const CATEGORIES = [
   'Plomería',
@@ -43,6 +44,11 @@ function TrabajosContent() {
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [loadingJobs, setLoadingJobs] = useState(true);
+
+  const [activeCategory, setActiveCategory] = useState('Todo');
+
+  const filteredJobs = jobs.filter(job => activeCategory === 'Todo' || job.category === activeCategory);
 
   // Sync URL search params on mount
   useEffect(() => {
@@ -94,6 +100,7 @@ function TrabajosContent() {
       } finally {
         if (cancelled) return;
         setLoading(false);
+        setLoadingJobs(false);
       }
     };
 
@@ -130,7 +137,7 @@ function TrabajosContent() {
             <span className="text-xl">🛡️</span>
             <span className="text-lg font-black text-blue-600 tracking-tighter">ChambaSegura</span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">{user?.user_metadata?.nombre_completo || user?.email}</span>
             <button onClick={() => signOut()} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all">Salir</button>
@@ -139,7 +146,7 @@ function TrabajosContent() {
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        
+
         {/* Header de la Página */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div className="max-w-xl">
@@ -157,7 +164,7 @@ function TrabajosContent() {
             >
               Ofrecer un Servicio
             </Link>
-            <Link 
+            <Link
               href="/trabajos/nuevo"
               className="inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm cursor-pointer active:scale-98 shadow-blue-500/10"
             >
@@ -174,7 +181,7 @@ function TrabajosContent() {
                 Categoría
               </label>
               <div className="relative">
-                <select 
+                <select
                   className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer font-medium text-sm"
                   value={filters.category}
                   onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
@@ -221,137 +228,142 @@ function TrabajosContent() {
         </div>
 
         {/* Listado Principal con estados asíncronos */}
-        {loading ? (
-          /* Skeletons Refinados */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="h-5 bg-gray-200 rounded-md w-1/4" />
-                  <div className="h-5 bg-gray-200 rounded-md w-1/5" />
+        {loadingJobs ? (
+          /* Skeleton Loader Optimizado en Proporciones */
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse space-y-3">
+                <div className="aspect-square bg-gray-200 rounded-2xl w-full" />
+                <div className="flex justify-between items-center pt-1">
+                  <div className="h-4 bg-gray-200 rounded-full w-2/3" />
+                  <div className="h-4 bg-gray-200 rounded-full w-8" />
                 </div>
-                <div className="h-6 bg-gray-200 rounded-md w-3/4" />
-                <div className="h-3 bg-gray-100 rounded-md w-1/3" />
-                <div className="space-y-2 pt-1">
-                  <div className="h-3 bg-gray-100 rounded-md w-full" />
-                  <div className="h-3 bg-gray-100 rounded-md w-5/6" />
-                </div>
-                <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="h-3 bg-gray-200 rounded-md w-1/2" />
-                    <div className="h-2 bg-gray-100 rounded-md w-1/3" />
-                  </div>
-                </div>
+                <div className="h-3 bg-gray-100 rounded-full w-1/3" />
+                <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+                <div className="h-4 bg-gray-200 rounded-full w-1/4 mt-2" />
               </div>
             ))}
           </div>
-        ) : error ? (
-          /* Caja de Error Limpia */
-          <div className="bg-red-50/60 border border-red-200/60 text-red-700 p-8 rounded-2xl text-center max-w-lg mx-auto">
-            <div className="text-3xl mb-3">⚠️</div>
-            <p className="font-bold text-base text-gray-900 mb-2">Ocurrió un inconveniente</p>
-            <p className="text-sm text-red-600/90 mb-5">{error}</p>
-            <button 
-              onClick={refreshJobs}
-              className="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm shadow-red-600/10"
+        ) : filteredJobs.length === 0 ? (
+          /* Empty State Rediseñado y Limpio */
+          <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center max-w-xl mx-auto my-4 shadow-xs">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-gray-900 font-semibold text-lg">No hay resultados disponibles</p>
+            <p className="text-gray-500 text-sm mt-1">No se encontraron trabajos en esta categoría en este momento.</p>
+            <button
+              onClick={() => setActiveCategory('Todo')}
+              className="mt-5 inline-flex items-center justify-center bg-gray-900 hover:bg-gray-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer active:scale-95"
             >
-              Reintentar carga
+              Limpiar filtros
             </button>
           </div>
-        ) : jobs.length === 0 ? (
-          /* Empty State Estilo Airbnb */
-          <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center max-w-xl mx-auto shadow-2xs">
-            <div className="w-14 h-14 bg-gray-50 border border-gray-100 text-gray-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-xl">
-              📭
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">No hay trabajos publicados</h2>
-            <p className="text-gray-500 text-sm max-w-xs mx-auto mb-6 leading-relaxed">
-              Prueba ajustando los filtros de búsqueda o sé el primero en abrir una vacante.
-            </p>
-            <Link 
-              href="/trabajos/nuevo"
-              className="inline-flex items-center gap-1.5 font-bold text-sm text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-            >
-              Publica el primer trabajo
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-          </div>
         ) : (
-          /* Grid de Tarjetas Optimizado */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {jobs.map(job => (
-              <Link 
-                key={job.id} 
-                href={`/trabajos/${job.id}`}
-                className="group flex flex-col bg-white rounded-2xl border border-gray-200/90 p-6 hover:shadow-md hover:border-blue-400/60 transition-all duration-200 cursor-pointer relative"
-              >
-                {/* Badge de Categoría e Indicador de Presupuesto */}
-                <div className="flex justify-between items-center gap-4 mb-4 select-none">
-                  <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg uppercase tracking-wider border border-blue-100/50">
+          /* Grid de Trabajos Premium */
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredJobs.map((job) => (
+              <Link key={job.id} href={`/trabajos/${job.id}`} className="group block cursor-pointer">
+
+                {/* Contenedor de Imagen / Ícono con Efectos visuales */}
+                <div className="relative aspect-square mb-3.5 overflow-hidden rounded-2xl bg-gray-100 border border-gray-200/60 shadow-xs">
+                  <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors z-10" />
+
+                  {/* Imagen real (Foto del usuario o Categoría por defecto) */}
+                  {(job as any).fotos_urls && (job as any).fotos_urls.length > 0 ? (
+                    <img
+                      src={(job as any).fotos_urls[0]}
+                      alt={`Foto de ${job.title}`}
+                      // Agregamos absolute, inset-0 y object-cover para un llenado perfecto a prueba de balas
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <img
+                      src={getCategoryImage(job.category)}
+                      alt={job.category}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  )}
+
+                  {/* Botón Favorito */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <button
+                      type="button"
+                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                      }}
+                    >
+                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Etiqueta flotante de Categoría (Opcional, si quieres que se vea encima de la foto) */}
+                  <div className="absolute top-3 left-3 z-20 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md shadow-sm">
+                    <span className="text-[10px] font-black text-gray-700 tracking-wider uppercase">
+                      {job.category}
+                    </span>
+                  </div>
+
+
+                  {/* Botón Favorito (Estilo Airbnb Flotante) */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <button
+                      type="button"
+                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault(); // Evita que abra el enlace del trabajo
+                        // Aquí puedes meter tu lógica de favoritos
+                      }}
+                    >
+                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Información del Trabajo */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-bold text-gray-900 leading-snug truncate flex-1" title={job.title}>
+                      {job.title}
+                    </h3>
+                    <div className="flex items-center gap-1 shrink-0 text-sm font-semibold text-gray-900">
+                      <span>⭐</span>
+                      <span className="text-sm font-medium">
+                        {job.perfiles?.rating_promedio !== null && job.perfiles?.rating_promedio !== undefined
+                          ? Number(job.perfiles.rating_promedio).toFixed(1)
+                          : 'N/A'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs font-medium text-gray-400 tracking-wide uppercase">
                     {job.category}
-                  </span>
-                  <span className="text-base font-extrabold text-gray-900 shrink-0">
-                    {job.budget ? `$${job.budget} USD` : 'Por definir'}
-                  </span>
-                </div>
-                
-                {/* Título Con Protección Estricta */}
-                <h3 className="text-lg font-bold text-gray-900 mb-1.5 group-hover:text-blue-600 transition-colors truncate max-w-full" title={job.title}>
-                  {job.title}
-                </h3>
-                
-                {/* Lógica Completa de Estados de Ubicación y GPS */}
-                {job.distancia_metros !== undefined && job.distancia_metros !== null ? (
-                  <p className="text-blue-600 text-xs font-bold mb-3.5 flex items-center gap-1 shrink-0">
-                    <svg className="w-3.5 h-3.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    A {formatDistance(job.distancia_metros)}
                   </p>
-                ) : job.ubicacion ? (
-                  <p className={`text-xs font-bold mb-3.5 flex items-center gap-1 shrink-0 ${geoLoading ? 'text-blue-500 animate-pulse' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-400'}`}>
-                    <svg className={`w-3.5 h-3.5 stroke-2 ${geoLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación para medir' : 'Ubicación no disponible'}
-                  </p>
-                ) : (
-                  <p className="text-gray-400 text-xs font-semibold mb-3.5 flex items-center gap-1 shrink-0">
-                    <span>🌐</span> Cobertura nacional / Sin ubicación
-                  </p>
-                )}
-                
-                {/* Descripción con límite de líneas controlado */}
-                <p className="text-gray-500 text-sm line-clamp-2 mb-5 flex-1 leading-relaxed">
-                  {job.description}
-                </p>
-                
-                {/* Footer de la Tarjeta: Info del Creador */}
-                <div className="flex items-center gap-3 pt-3.5 border-t border-gray-100 mt-auto">
-                  <div className="w-8 h-8 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center text-xs font-extrabold text-gray-500 uppercase select-none shrink-0">
-                    {job.perfiles?.nombre_completo?.charAt(0) || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-gray-900 truncate">
-                      {job.perfiles?.nombre_completo || 'Usuario desconocido'}
+
+                  {/* Estado de Ubicación e Indicadores con mejor feedback */}
+                  {job.distancia_metros !== undefined && job.distancia_metros !== null ? (
+                    <p className="text-sm text-blue-600 font-semibold flex items-center gap-1">
+                      <span>📍</span> A {formatDistance(job.distancia_metros)}
                     </p>
-                    <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mt-0.5">
-                      {new Date(job.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                  ) : job.ubicacion ? (
+                    <p className={`text-sm font-medium ${geoLoading ? 'text-blue-500 animate-pulse' : location ? 'text-blue-400' : denied ? 'text-amber-600' : 'text-gray-400'}`}>
+                      {geoLoading ? 'Calculando distancia...' : location ? 'Cargando distancia...' : denied ? 'Activa tu ubicación para medir distancia' : 'Ubicación no disponible'}
                     </p>
-                  </div>
-                  
-                  {/* Flecha interactiva sutil de la tarjeta */}
-                  <div className="text-gray-300 group-hover:text-blue-500 transition-colors pl-1 shrink-0">
-                    <svg className="w-4 h-4 transform transition-transform group-hover:translate-x-0.5 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">Sin ubicación especificada</p>
+                  )}
+
+                  {/* Precio / Presupuesto resaltado */}
+                  <p className="text-[15px] font-extrabold text-gray-900 pt-1">
+                    ${job.budget || 0} USD
+                  </p>
                 </div>
+
               </Link>
             ))}
           </div>

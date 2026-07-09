@@ -9,7 +9,7 @@ import { JobPayload, JobFilter } from './jobs.controller';
 
 @Injectable()
 export class JobsService {
-  constructor(private readonly supabase: SupabaseClient<Database>) {}
+  constructor(private readonly supabase: SupabaseClient<Database>) { }
 
   async searchJobs(filters: JobFilter) {
     const lat = filters.latitude ? Number(filters.latitude) : undefined;
@@ -83,10 +83,11 @@ export class JobsService {
   }
 
   async createJob(payload: JobPayload) {
-    const { latitude, longitude, ...jobData } = payload;
+    const { latitude, longitude, fotos_urls = [], ...jobData } = payload;
 
     const insertData: any = {
       ...jobData,
+      fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
     };
 
     if (latitude && longitude) {
@@ -107,10 +108,11 @@ export class JobsService {
   }
 
   async updateJob(id: string, payload: Partial<JobPayload>) {
-    const { latitude, longitude, ...jobData } = payload;
+    const { latitude, longitude, fotos_urls = [], ...jobData } = payload;
 
     const updateData: any = {
       ...jobData,
+      fotos_urls: fotos_urls.length > 0 ? fotos_urls : null,
     };
 
     if (latitude && longitude) {
