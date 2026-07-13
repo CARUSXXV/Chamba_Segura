@@ -34,8 +34,8 @@ export default function PagoExitosoPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <nav className="bg-white/90 backdrop-blur-xl border-b border-gray-100 h-16 flex items-center px-6 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto w-full flex items-center gap-3">
-          <Link href="/" className="text-xl font-black text-blue-600 tracking-tighter flex items-center gap-2">
-            <span>🛡️</span> ChambaSegura
+          <Link href="/">
+            <img src="/images/logo-azul.png" alt="ChambaSegura" className="h-8 w-auto" />
           </Link>
         </div>
       </nav>

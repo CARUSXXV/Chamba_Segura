@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function Navigation() {
+export default function InfoNavigation() {
   const { user, signOut } = useAuth();
   return (
     <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-xl border-b border-gray-100">
@@ -10,11 +10,6 @@ export default function Navigation() {
         <Link href="/">
           <img src="/images/logo-azul.png" alt="ChambaSegura" className="h-9 w-auto" />
         </Link>
-        <div className="hidden md:flex items-center gap-8">
-          <a href="#servicios" className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">Servicios</a>
-          <a href="#como-funciona" className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">Cómo Funciona</a>
-          <a href="#precios" className="text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">Precios</a>
-        </div>
         <div className="flex items-center gap-4">
           {user ? (
             <div className="flex items-center gap-4">

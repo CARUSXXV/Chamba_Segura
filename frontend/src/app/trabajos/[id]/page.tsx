@@ -151,8 +151,7 @@ export default function DetalleTrabajoPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <span className="text-xl">🛡️</span>
-            <span className="text-lg font-black text-blue-600 tracking-tighter">ChambaSegura</span>
+            <img src="/images/logo-azul.png" alt="ChambaSegura" className="h-8 w-auto" />
           </div>
         </div>
       </nav>

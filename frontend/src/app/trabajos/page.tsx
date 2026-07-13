@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useGeolocation } from '@/utils/useGeolocation';
 import { getFromCache, setInCache, buildCacheKey } from '@/utils/cache';
 import { getCategoryImage } from '@/app/lib/categoryImages';
+import { getFavoriteJobs, toggleFavoriteJob } from '@/utils/favorites';
 
 const CATEGORIES = [
   'Plomería',
@@ -45,10 +46,21 @@ function TrabajosContent() {
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadingJobs, setLoadingJobs] = useState(true);
+  const [favoriteJobs, setFavoriteJobs] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFavoriteJobs(getFavoriteJobs());
+  }, []);
 
   const [activeCategory, setActiveCategory] = useState('Todo');
 
-  const filteredJobs = jobs.filter(job => activeCategory === 'Todo' || job.category === activeCategory);
+  const filteredJobs = jobs.filter(job => {
+    const matchesCategory = activeCategory === 'Todo' ||
+      (activeCategory === 'Favoritos' ? favoriteJobs.includes(job.id) : job.category === activeCategory);
+    const matchesFilterCategory = !filters.category ||
+      (filters.category === 'Favoritos' ? favoriteJobs.includes(job.id) : true);
+    return matchesCategory && matchesFilterCategory;
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'trabajos' | 'servicios'>('trabajos');
@@ -92,7 +104,7 @@ function TrabajosContent() {
       if (cancelled) return;
       try {
         const data = await fetchJobs(session.access_token, {
-          category: filters.category || undefined,
+          category: (filters.category && filters.category !== 'Favoritos') ? filters.category : undefined,
           latitude: useGps ? location?.latitude : undefined,
           longitude: useGps ? location?.longitude : undefined,
           radius: filters.radius
@@ -136,11 +148,8 @@ function TrabajosContent() {
       <nav className="bg-white/95 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
 
-          <Link href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
-            <span className="text-2xl">🛡️</span>
-            <span className="hidden lg:block text-xl font-black text-blue-600 tracking-tighter">
-              ChambaSegura
-            </span>
+          <Link href="/" className="shrink-0">
+            <img src="/images/logo-azul.png" alt="ChambaSegura" className="h-9 w-auto" />
           </Link>
 
           {/* Barra de Búsqueda */}
@@ -331,6 +340,7 @@ function TrabajosContent() {
                   onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
                 >
                   <option value="" className="text-gray-500">Todas las categorías</option>
+                  <option value="Favoritos" className="text-red-600 font-bold">❤️ Mis Favoritos</option>
                   {CATEGORIES.map(cat => (
                     <option key={cat} value={cat} className="text-gray-900">{cat}</option>
                   ))}
@@ -433,12 +443,21 @@ function TrabajosContent() {
                   <div className="absolute top-3 right-3 z-20">
                     <button
                       type="button"
-                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
+                      className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                        favoriteJobs.includes(job.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                      }`}
                       onClick={(e) => {
                         e.preventDefault();
+                        setFavoriteJobs(toggleFavoriteJob(job.id));
                       }}
                     >
-                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-4 h-4 transition-colors duration-200"
+                        fill={favoriteJobs.includes(job.id) ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth={favoriteJobs.includes(job.id) ? "0" : "2"}
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                       </svg>
                     </button>
@@ -449,23 +468,6 @@ function TrabajosContent() {
                     <span className="text-[10px] font-black text-gray-700 tracking-wider uppercase">
                       {job.category}
                     </span>
-                  </div>
-
-
-                  {/* Botón Favorito (Estilo Airbnb Flotante) */}
-                  <div className="absolute top-3 right-3 z-20">
-                    <button
-                      type="button"
-                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault(); // Evita que abra el enlace del trabajo
-                        // Aquí puedes meter tu lógica de favoritos
-                      }}
-                    >
-                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
 

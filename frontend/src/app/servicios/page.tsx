@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useGeolocation } from "@/utils/useGeolocation";
 import { getFromCache, setInCache, buildCacheKey } from "@/utils/cache";
 import { getCategoryImage } from '@/app/lib/categoryImages';
+import { getFavoriteServices, toggleFavoriteService } from '@/utils/favorites';
 
 const OFICIOS = [
   "Plomería",
@@ -45,9 +46,20 @@ function ServiciosContent() {
   const [servicios, setServicios] = useState<Servicio[]>(cached ?? []);
   const [loading, setLoading] = useState(!cached);
   const [error, setError] = useState<string | null>(null);
+  const [favoriteServices, setFavoriteServices] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFavoriteServices(getFavoriteServices());
+  }, []);
 
   const [activeCategory, setActiveCategory] = useState('Todo');
-  const filteredServices = servicios.filter(job => activeCategory === 'Todo' || job.oficio === activeCategory);
+  const filteredServices = servicios.filter(job => {
+    const matchesCategory = activeCategory === 'Todo' ||
+      (activeCategory === 'Favoritos' ? favoriteServices.includes(job.id) : job.oficio === activeCategory);
+    const matchesFilterCategory = !filters.oficio ||
+      (filters.oficio === 'Favoritos' ? favoriteServices.includes(job.id) : true);
+    return matchesCategory && matchesFilterCategory;
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'trabajos' | 'servicios'>('servicios');
@@ -89,7 +101,7 @@ function ServiciosContent() {
           latitude: useGps ? location?.latitude : undefined,
           longitude: useGps ? location?.longitude : undefined,
           radius: filters.radius,
-          oficio: filters.oficio || undefined,
+          oficio: (filters.oficio && filters.oficio !== 'Favoritos') ? filters.oficio : undefined,
         });
         if (cancelled) return;
         setServicios(data);
@@ -134,11 +146,8 @@ function ServiciosContent() {
       <nav className="bg-white/95 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
 
-          <Link href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
-            <span className="text-2xl">🛡️</span>
-            <span className="hidden lg:block text-xl font-black text-blue-600 tracking-tighter">
-              ChambaSegura
-            </span>
+          <Link href="/" className="shrink-0">
+            <img src="/images/logo-azul.png" alt="ChambaSegura" className="h-9 w-auto" />
           </Link>
 
           {/* Barra de Búsqueda */}
@@ -332,6 +341,7 @@ function ServiciosContent() {
                   }
                 >
                   <option value="" className="text-gray-500">Todos los oficios</option>
+                  <option value="Favoritos" className="text-red-600 font-bold">❤️ Mis Favoritos</option>
                   {OFICIOS.map((o) => (
                     <option key={o} value={o} className="text-gray-900">
                       {o}
@@ -441,12 +451,21 @@ function ServiciosContent() {
                   <div className="absolute top-3 right-3 z-20">
                     <button
                       type="button"
-                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
+                      className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
+                        favoriteServices.includes(servicio.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                      }`}
                       onClick={(e) => {
                         e.preventDefault();
+                        setFavoriteServices(toggleFavoriteService(servicio.id));
                       }}
                     >
-                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
+                      <svg
+                        className="w-4 h-4 transition-colors duration-200"
+                        fill={favoriteServices.includes(servicio.id) ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth={favoriteServices.includes(servicio.id) ? "0" : "2"}
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                       </svg>
                     </button>
@@ -459,22 +478,6 @@ function ServiciosContent() {
                     </span>
                   </div>
 
-
-                  {/* Botón Favorito (Estilo Airbnb Flotante) */}
-                  <div className="absolute top-3 right-3 z-20">
-                    <button
-                      type="button"
-                      className="w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500 hover:scale-105 active:scale-90 transition-all cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault(); // Evita que abra el enlace del trabajo
-                        // Aquí puedes meter tu lógica de favoritos
-                      }}
-                    >
-                      <svg className="w-4 h-4 transition-colors duration-200" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Información del Trabajo */}
