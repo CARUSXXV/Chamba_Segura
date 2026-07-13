@@ -169,6 +169,7 @@ export default function EditarTrabajoPage() {
         description: formData.description!,
         category: formData.category!,
         required_skills: formData.required_skills,
+        estado: false,
         budget: formData.budget,
         contractor_id: user.id,
         latitude: location?.latitude,

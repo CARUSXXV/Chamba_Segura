@@ -138,6 +138,7 @@ export default function NuevoTrabajoPage() {
         latitude: location?.latitude,
         longitude: location?.longitude,
         fotos_urls: urlsSubidas, // <-- ¡Aquí van los links hacia tu API de NestJS!
+        estado: false,
       };
 
       // 4. Se lo mandamos a tu backend como siempre

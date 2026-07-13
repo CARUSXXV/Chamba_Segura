@@ -8,6 +8,8 @@ export interface Servicio {
   firma_contrato: boolean;
   actualizado_el: string;
   distancia_metros?: number | null;
+  fotos_url?: string[];
+  budget: number;
   ubicacion?: {
     type: string;
     coordinates: [number, number]; // [longitude, latitude]
@@ -29,6 +31,7 @@ export interface ServicioPayload {
   firma_contrato?: boolean;
   latitude?: number;
   longitude?: number;
+  fotos_url?: string[];
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';

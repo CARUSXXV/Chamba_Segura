@@ -50,6 +50,13 @@ function TrabajosContent() {
 
   const filteredJobs = jobs.filter(job => activeCategory === 'Todo' || job.category === activeCategory);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'trabajos' | 'servicios'>('trabajos');
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const name = user?.user_metadata?.nombre_completo || user?.user_metadata?.username || 'Usuario';
+  const initial = (user?.user_metadata?.nombre_completo || user?.email || 'U').charAt(0).toUpperCase();
+
   // Sync URL search params on mount
   useEffect(() => {
     const category = searchParams.get('category') || '';
@@ -126,22 +133,165 @@ function TrabajosContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <span className="text-xl">🛡️</span>
-            <span className="text-lg font-black text-blue-600 tracking-tighter">ChambaSegura</span>
+      <nav className="bg-white/95 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-50 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+
+          <Link href="/" className="flex items-center gap-2 cursor-pointer shrink-0">
+            <span className="text-2xl">🛡️</span>
+            <span className="hidden lg:block text-xl font-black text-blue-600 tracking-tighter">
+              ChambaSegura
+            </span>
+          </Link>
+
+          {/* Barra de Búsqueda */}
+          <div className="flex-1 max-w-2xl mx-auto">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder={`Buscar ${viewMode === 'trabajos' ? 'trabajos' : 'servicios'}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-11 pr-4 py-3 bg-gray-100 border-transparent text-gray-900 rounded-full focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all font-medium text-sm placeholder:text-gray-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.user_metadata?.nombre_completo || user?.email}</span>
-            <button onClick={() => signOut()} className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all">Salir</button>
+          {/* 👇 NUEVO PERFIL CON MENÚ DESPLEGABLE 👇 */}
+          <div className="relative flex items-center shrink-0">
+
+            {/* Botón que abre/cierra el menú */}
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className="flex items-center gap-2 p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer border border-transparent hover:border-gray-200 focus:outline-none"
+            >
+              <div className="w-10 h-10 bg-blue-50 text-blue-700 rounded-full flex items-center justify-center text-sm font-black border border-blue-200 shadow-sm">
+                {initial}
+              </div>
+              <span className="hidden sm:block text-sm font-bold text-gray-700">
+                {name.split(' ')[0]}
+              </span>
+              <svg
+                className={`w-4 h-4 text-gray-500 transition-transform duration-300 ease-in-out ${isProfileMenuOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Capa invisible para detectar el clic fuera del menú y cerrarlo */}
+            <div
+              className={`fixed inset-0 z-40 transition-opacity duration-300 ease-out ${isProfileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+                }`}
+              onClick={() => setIsProfileMenuOpen(false)}
+            />
+
+            {/* Contenedor del Menú con animación fluida de entrada y salida */}
+            <div
+              className={`absolute top-full right-0 mt-3 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 overflow-hidden z-50 flex flex-col origin-top-right transition-all duration-300 ease-out ${isProfileMenuOpen
+                ? 'opacity-100 scale-100 translate-y-0 visible'
+                : 'opacity-0 scale-95 -translate-y-4 invisible pointer-events-none'
+                }`}
+            >
+
+              {/* Encabezado del Perfil */}
+              <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                <p className="font-black text-gray-900">{name}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+
+              {/* Opciones del menu */}
+              <div className="p-2 flex flex-col gap-0.5">
+
+                <Link href="/trabajos" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-blue-50 transition-colors group">
+                  <div className="w-10 h-10 bg-blue-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">💼</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Trabajos</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Explora trabajos, postúlate y publica</span>
+                  </div>
+                </Link>
+
+                <Link href="/servicios" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-cyan-50 transition-colors group">
+                  <div className="w-10 h-10 bg-cyan-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">🔍</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Servicios</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Busca y ofrece servicios profesionales</span>
+                  </div>
+                </Link>
+
+                <Link href="/mensajeria" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-purple-50 transition-colors group">
+                  <div className="w-10 h-10 bg-purple-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">💬</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Mensajería</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Conversa con clientes y trabajadores</span>
+                  </div>
+                </Link>
+
+                <Link href="/dashboard/contrataciones" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-orange-50 transition-colors group">
+                  <div className="w-10 h-10 bg-orange-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📄</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Contrataciones</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Gestiona solicitudes y contratos</span>
+                  </div>
+                </Link>
+
+                <Link href="/perfil" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-emerald-50 transition-colors group">
+                  <div className="w-10 h-10 bg-emerald-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">👤</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Mi Perfil</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Edita tu información personal</span>
+                  </div>
+                </Link>
+              </div>
+
+              {/* Sección Inferior: Salir y Publicar */}
+              <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col gap-4">
+
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-2 w-full px-2 text-red-500 hover:text-red-700 font-bold text-sm transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Cerrar Sesión
+                </button>
+
+                {/* Botones de Publicar Trabajo o Servicio (Color Verde) */}
+                <div className="flex gap-2">
+                  <Link
+                    href="/trabajos/nuevo"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-xs transition-transform hover:scale-105 shadow-md shadow-green-500/20"
+                  >
+                    <svg className="w-4 h-4 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    TRABAJO
+                  </Link>
+                  <Link
+                    href="/servicios/nuevo"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs transition-transform hover:scale-105 shadow-md shadow-emerald-600/20"
+                  >
+                    <svg className="w-4 h-4 stroke-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    SERVICIO
+                  </Link>
+                </div>
+
+              </div>
+            </div>
+
           </div>
+          {/* 👆 FIN DEL NUEVO PERFIL 👆 */}
         </div>
       </nav>
 
@@ -158,12 +308,6 @@ function TrabajosContent() {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-            <Link
-              href="/servicios/nuevo"
-              className="inline-flex items-center justify-center px-5 py-3 border border-gray-200 text-sm font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-2xs cursor-pointer active:scale-98"
-            >
-              Ofrecer un Servicio
-            </Link>
             <Link
               href="/trabajos/nuevo"
               className="inline-flex items-center justify-center px-5 py-3 text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm cursor-pointer active:scale-98 shadow-blue-500/10"

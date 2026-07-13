@@ -47,7 +47,11 @@ export class JobsService {
 
     let query = this.supabase
       .from('jobs')
-      .select('*, perfiles!contractor_id(id, nombre_completo, foto_url, rating_promedio, total_calificaciones)');
+      .select('*')
+    // 👇 Filtramos para traer SOLO los que NO estén completados
+    // (Ajusta 'estado' y 'completado' al nombre exacto de tus columnas en Postgres)
+    //.neq('estado', false)
+    //.order('created_at', { ascending: false });
 
     if (filters.category) {
       query = query.eq('category', filters.category);
