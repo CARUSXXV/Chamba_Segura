@@ -26,7 +26,7 @@ export default function TerminosPage() {
 
           {/* Barra de navegación interna */}
           <div className="sticky top-20 z-10 bg-white/95 backdrop-blur-xl border-b border-gray-100 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-4 mb-10">
-            <nav className="flex gap-6 text-sm font-medium text-gray-500 overflow-x-auto scrollbar-hide">
+            <nav className="flex gap-6 text-sm font-medium text-gray-500 overflow-x-auto">
               <a href="#aceptacion" className="hover:text-blue-600 transition-colors whitespace-nowrap">Aceptación</a>
               <a href="#definiciones" className="hover:text-blue-600 transition-colors whitespace-nowrap">Definiciones</a>
               <a href="#naturaleza" className="hover:text-blue-600 transition-colors whitespace-nowrap">Naturaleza</a>

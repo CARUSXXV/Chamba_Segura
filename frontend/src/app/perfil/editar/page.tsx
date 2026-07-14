@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { updateProfile, deleteMyProfile, fetchProfileById } from '@/api/profile';
+import { supabase } from '@/utils/supabase';
 import Link from 'next/link';
 
 export default function EditarPerfilPage() {
@@ -72,6 +73,13 @@ export default function EditarPerfilPage() {
         username: profileData.username,
         email_contacto: profileData.email_contacto,
         telefono: profileData.telefono,
+      });
+
+      await supabase.auth.updateUser({
+        data: {
+          nombre_completo: profileData.nombre_completo,
+          username: profileData.username,
+        },
       });
 
       router.push('/perfil');

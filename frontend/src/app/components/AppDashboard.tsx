@@ -22,6 +22,95 @@ function getGreeting() {
   return "Buenas noches";
 }
 
+function Pagination({
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange,
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  const from = (currentPage - 1) * pageSize + 1;
+  const to = Math.min(currentPage * pageSize, totalItems);
+
+  const getVisiblePages = () => {
+    const pages: (number | "...")[] = [];
+    const delta = 2;
+    const left = Math.max(2, currentPage - delta);
+    const right = Math.min(totalPages - 1, currentPage + delta);
+
+    pages.push(1);
+    if (left > 2) pages.push("...");
+    for (let i = left; i <= right; i++) pages.push(i);
+    if (right < totalPages - 1) pages.push("...");
+    if (totalPages > 1) pages.push(totalPages);
+
+    return pages;
+  };
+
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-10 flex flex-col items-center gap-4">
+      <p className="text-sm text-gray-500">
+        Mostrando{" "}
+        <span className="font-semibold text-gray-900">{from}</span>
+        {" "}-{" "}
+        <span className="font-semibold text-gray-900">{to}</span>{" "}
+        de{" "}
+        <span className="font-semibold text-gray-900">{totalItems}</span>{" "}
+        resultados
+      </p>
+      <nav className="flex items-center gap-1.5" aria-label="Paginación">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-gray-600 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Anterior
+        </button>
+
+        {getVisiblePages().map((page, idx) =>
+          page === "..." ? (
+            <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 text-sm">...</span>
+          ) : (
+            <button
+              key={page}
+              onClick={() => onPageChange(page as number)}
+              className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                currentPage === page
+                  ? "bg-gray-900 text-white shadow-md"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              {page}
+            </button>
+          )
+        )}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="flex items-center gap-1 px-3 py-2 text-sm font-semibold text-gray-600 rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+        >
+          Siguiente
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  );
+}
+
 export default function AppDashboard() {
   const { user, session, signOut } = useAuth();
   const {
@@ -51,6 +140,8 @@ export default function AppDashboard() {
   const [viewMode, setViewMode] = useState<"trabajos" | "servicios">(
     "trabajos",
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   // Inicia cerrada
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -98,15 +189,31 @@ export default function AppDashboard() {
     return matchesCategory && matchesSearch;
   });
 
+  const totalJobsPages = Math.ceil(filteredJobs.length / PAGE_SIZE);
+  const paginatedJobs = filteredJobs.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  const totalServicesPages = Math.ceil(filteredServices.length / PAGE_SIZE);
+  const paginatedServices = filteredServices.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, searchQuery, viewMode]);
+
   useEffect(() => {
     async function loadJobs() {
       if (!session?.access_token) return;
       try {
-        const data = await fetchJobs(session.access_token, {
+        const result = await fetchJobs(session.access_token, {
           latitude: location?.latitude,
           longitude: location?.longitude,
         });
-        setJobs(data);
+        setJobs(result.data);
       } catch (err) {
         console.error("Error loading jobs:", err);
       } finally {
@@ -120,13 +227,13 @@ export default function AppDashboard() {
     async function loadServices() {
       if (!session?.access_token) return;
       try {
-        const data = await fetchServicios(session.access_token, {
+        const result = await fetchServicios(session.access_token, {
           latitude: location?.latitude,
           longitude: location?.longitude,
         });
-        setServices(data);
+        setServices(result.data);
       } catch (err) {
-        console.error("Error loading jobs:", err);
+        console.error("Error loading services:", err);
       } finally {
         setLoadingServices(false);
       }
@@ -736,7 +843,7 @@ export default function AppDashboard() {
                 </div>
               ) : (
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredJobs.map((job) => (
+                  {paginatedJobs.map((job) => (
                     <Link
                       key={job.id}
                       href={`/trabajos/${job.id}`}
@@ -828,6 +935,15 @@ export default function AppDashboard() {
                   ))}
                 </div>
               )}
+              {!loadingJobs && filteredJobs.length > 0 && totalJobsPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalJobsPages}
+                  totalItems={filteredJobs.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setCurrentPage}
+                />
+              )}
             </section>
           )}
 
@@ -869,7 +985,7 @@ export default function AppDashboard() {
               ) : (
                 <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {/* AQUÍ CORREGÍ EL MAP Y LA VARIABLE PARA USAR "servicio" EN VEZ DE "job" */}
-                  {filteredServices.map((servicio) => (
+                  {paginatedServices.map((servicio) => (
                     <Link
                       key={servicio.id}
                       href={`/servicios/${servicio.id}`}
@@ -961,6 +1077,15 @@ export default function AppDashboard() {
                     </Link>
                   ))}
                 </div>
+              )}
+              {!loadingServices && filteredServices.length > 0 && totalServicesPages > 1 && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalServicesPages}
+                  totalItems={filteredServices.length}
+                  pageSize={PAGE_SIZE}
+                  onPageChange={setCurrentPage}
+                />
               )}
             </section>
           )}

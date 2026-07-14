@@ -34,17 +34,27 @@ export interface ServicioPayload {
   fotos_url?: string[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-const SERVICIOS_URL = `${API_BASE_URL}/servicios`;
-
 export interface ServicioFilter {
   latitude?: number;
   longitude?: number;
   radius?: number;
   oficio?: string;
+  page?: number;
+  limit?: number;
 }
 
-export async function fetchServicios(token: string, filters?: ServicioFilter): Promise<Servicio[]> {
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const SERVICIOS_URL = `${API_BASE_URL}/servicios`;
+
+export async function fetchServicios(token: string, filters?: ServicioFilter): Promise<PaginatedResponse<Servicio>> {
   const url = new URL(SERVICIOS_URL);
   if (filters?.latitude !== undefined && filters?.longitude !== undefined) {
     url.searchParams.append('latitude', filters.latitude.toString());
@@ -55,6 +65,12 @@ export async function fetchServicios(token: string, filters?: ServicioFilter): P
   }
   if (filters?.oficio) {
     url.searchParams.append('oficio', filters.oficio);
+  }
+  if (filters?.page) {
+    url.searchParams.append('page', filters.page.toString());
+  }
+  if (filters?.limit) {
+    url.searchParams.append('limit', filters.limit.toString());
   }
 
   const response = await fetch(url.toString(), {

@@ -103,16 +103,16 @@ function TrabajosContent() {
     const fetchData = async (useGps: boolean) => {
       if (cancelled) return;
       try {
-        const data = await fetchJobs(session.access_token, {
+        const result = await fetchJobs(session.access_token, {
           category: (filters.category && filters.category !== 'Favoritos') ? filters.category : undefined,
           latitude: useGps ? location?.latitude : undefined,
           longitude: useGps ? location?.longitude : undefined,
           radius: filters.radius
         });
         if (cancelled) return;
-        setJobs(data);
+        setJobs(result.data);
         setError(null);
-        if (!useGps) setInCache(cacheKey, data);
+        if (!useGps) setInCache(cacheKey, result.data);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : 'Error al cargar los trabajos');

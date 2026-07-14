@@ -27,10 +27,25 @@ export class ServiciosService {
     return this.supabaseService.getClient();
   }
 
-  async findAll(oficio?: string): Promise<ServicioDetails[]> {
+  async findAll(oficio?: string, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+
+    let queryCount = this.client
+      .from('servicios')
+      .select('*', { count: 'exact', head: true });
+
+    if (oficio) {
+      queryCount = queryCount.eq('oficio', oficio);
+    }
+
+    const { count, error: countError } = await queryCount;
+    if (countError) throw new InternalServerErrorException(countError.message);
+
     let query = this.client
       .from('servicios')
-      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)');
+      .select('*, perfiles!trabajador_id(nombre_completo, foto_url, rating_promedio, total_calificaciones)')
+      .order('actualizado_el', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (oficio) {
       query = query.eq('oficio', oficio);
@@ -39,12 +54,13 @@ export class ServiciosService {
     const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
 
-    const servicios = (data ?? []) as unknown as ServicioDetails[];
-    return servicios.sort((a, b) => {
-      const fechaA = (a as any).creado_el || (a as any).actualizado_el || '';
-      const fechaB = (b as any).creado_el || (b as any).actualizado_el || '';
-      return fechaB.toString().localeCompare(fechaA.toString());
-    });
+    return {
+      data: (data ?? []) as unknown as ServicioDetails[],
+      total: count ?? 0,
+      page,
+      limit,
+      totalPages: count ? Math.ceil(count / limit) : 0,
+    };
   }
 
   async findNearby(
@@ -52,7 +68,11 @@ export class ServiciosService {
     long: number,
     radius?: number,
     oficio?: string,
-  ): Promise<ServicioDetails[]> {
+    page = 1,
+    limit = 20,
+  ) {
+    const offset = (page - 1) * limit;
+
     const { data, error } = await this.client.rpc('buscar_servicios_cercanos' as any, {
       lat,
       long,
@@ -62,7 +82,7 @@ export class ServiciosService {
 
     if (error) throw new InternalServerErrorException(error.message);
 
-    return (data as any[]).map((servicio) => ({
+    const allServicios = (data as any[]).map((servicio) => ({
       ...servicio,
       perfiles: {
         nombre_completo: servicio.perfil_nombre_completo,
@@ -71,6 +91,17 @@ export class ServiciosService {
         total_calificaciones: servicio.perfil_total_calificaciones,
       },
     })) as unknown as ServicioDetails[];
+
+    const total = allServicios.length;
+    const paginatedData = allServicios.slice(offset, offset + limit);
+
+    return {
+      data: paginatedData,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: string): Promise<ServicioDetails> {

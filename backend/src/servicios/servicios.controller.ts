@@ -22,10 +22,14 @@ export class ServiciosController {
     @Query('longitude') longitudeStr?: string,
     @Query('radius') radiusStr?: string,
     @Query('oficio') oficio?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
   ) {
     const latitude = latitudeStr ? Number(latitudeStr) : undefined;
     const longitude = longitudeStr ? Number(longitudeStr) : undefined;
     const radius = radiusStr ? Number(radiusStr) : undefined;
+    const page = pageStr ? Math.max(1, Number(pageStr)) : 1;
+    const limit = limitStr ? Math.min(100, Math.max(1, Number(limitStr))) : 20;
 
     if (latitude !== undefined && !isNaN(latitude) && longitude !== undefined && !isNaN(longitude)) {
       return this.serviciosService.findNearby(
@@ -33,9 +37,11 @@ export class ServiciosController {
         longitude,
         radius,
         oficio,
+        page,
+        limit,
       );
     }
-    return this.serviciosService.findAll(oficio);
+    return this.serviciosService.findAll(oficio, page, limit);
   }
 
   @Get(':id')

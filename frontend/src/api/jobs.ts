@@ -44,12 +44,22 @@ export interface JobFilter {
   latitude?: number;
   longitude?: number;
   radius?: number;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 const JOBS_URL = `${API_BASE_URL}/jobs`;
 
-export async function fetchJobs(token: string, filters?: JobFilter): Promise<Job[]> {
+export async function fetchJobs(token: string, filters?: JobFilter): Promise<PaginatedResponse<Job>> {
   const url = new URL(JOBS_URL);
   if (filters?.category) {
     url.searchParams.append('category', filters.category);
@@ -63,6 +73,12 @@ export async function fetchJobs(token: string, filters?: JobFilter): Promise<Job
     if (filters.radius) {
       url.searchParams.append('radius', filters.radius.toString());
     }
+  }
+  if (filters?.page) {
+    url.searchParams.append('page', filters.page.toString());
+  }
+  if (filters?.limit) {
+    url.searchParams.append('limit', filters.limit.toString());
   }
 
   const response = await fetch(url.toString(), {

@@ -97,16 +97,16 @@ function ServiciosContent() {
     const fetchData = async (useGps: boolean) => {
       if (cancelled) return;
       try {
-        const data = await fetchServicios(session.access_token, {
+        const result = await fetchServicios(session.access_token, {
           latitude: useGps ? location?.latitude : undefined,
           longitude: useGps ? location?.longitude : undefined,
           radius: filters.radius,
           oficio: (filters.oficio && filters.oficio !== 'Favoritos') ? filters.oficio : undefined,
         });
         if (cancelled) return;
-        setServicios(data);
+        setServicios(result.data);
         setError(null);
-        if (!useGps) setInCache(cacheKey, data);
+        if (!useGps) setInCache(cacheKey, result.data);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "Error al cargar servicios");
