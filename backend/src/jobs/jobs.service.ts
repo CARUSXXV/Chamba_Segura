@@ -48,17 +48,12 @@ export class JobsService {
     let query = this.supabase
       .from('jobs')
       .select('*')
-    // 👇 Filtramos para traer SOLO los que NO estén completados
-    // (Ajusta 'estado' y 'completado' al nombre exacto de tus columnas en Postgres)
-    //.neq('estado', false)
-    //.order('created_at', { ascending: false });
 
     if (filters.category) {
       query = query.eq('category', filters.category);
     }
 
     if (skills && skills.length > 0) {
-      // Búsqueda en array de PostgreSQL: trae trabajos que contengan estas habilidades
       query = query.contains('required_skills', skills);
     }
 
@@ -68,7 +63,11 @@ export class JobsService {
         `Error consultando trabajos: ${error.message}`,
       );
 
-    return data;
+    return (data ?? []).sort((a: any, b: any) => {
+      const fechaA = a.created_at || a.enviado_el || '';
+      const fechaB = b.created_at || b.enviado_el || '';
+      return fechaB.toString().localeCompare(fechaA.toString());
+    });
   }
 
   async getJobById(id: string) {

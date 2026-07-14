@@ -409,74 +409,83 @@ export default function AppDashboard() {
 
       {/* Dynamic Banner Section */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-        <div className="relative w-full h-36 sm:h-48 md:h-56 lg:h-64 rounded-3xl overflow-hidden shadow-xs border border-gray-200 bg-white">
-          {/* Worker Banner (Trabajos) */}
-          <img
-            src="/images/16.png"
-            alt="Trabajos"
-            className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
-              viewMode === "trabajos" ? "opacity-100" : "opacity-0"
-            }`}
-          />
-          {/* Corporate Banner (Servicios) */}
-          <img
-            src="/images/17.png"
-            alt="Servicios"
-            className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
-              viewMode === "servicios" ? "opacity-100" : "opacity-0"
-            }`}
-          />
+  <div className="relative w-full h-40 sm:h-48 md:h-56 lg:h-64 rounded-3xl overflow-hidden shadow-xs border border-gray-200 bg-white">
+    
+    {/* Banners de Fondo Originales (Intactos, tal cual los tenías) */}
+    <img
+      src="/images/16.png"
+      alt="Trabajos"
+      className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
+        viewMode === "trabajos" ? "opacity-100" : "opacity-0"
+      }`}
+    />
+    <img
+      src="/images/17.png"
+      alt="Servicios"
+      className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
+        viewMode === "servicios" ? "opacity-100" : "opacity-0"
+      }`}
+    />
 
-          {/* Dynamic Content Overlay */}
-          <div className="absolute inset-y-0 left-0 w-[55%] sm:w-1/2 md:w-[45%] flex flex-col justify-center pl-6 sm:pl-6 md:pl-8 lg:pl-10 z-20 font-poppins">
-            <div className="max-w-md transition-all duration-300">
-              <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full mb-2">
-                {viewMode === "trabajos"
-                  ? "Búsqueda de Empleo"
-                  : "Directorio de Servicios"}
-              </span>
-              <h2 className="text-base sm:text-2xl md:text-2xl lg:text3xl font-extrabold text-slate-900 leading-tight">
-                ¡Bienvenido,{" "}
-                <span className="text-blue-600">{name.split(" ")[0]}</span>!
-              </h2>
-              <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold mt-1.5 sm:mt-2.5 md:mt-3 leading-snug">
-                {viewMode === "trabajos" ? (
-                  <>
-                    Se publicaron{" "}
-                    <span className="text-blue-600 font-black">
-                      {jobs.length} trabajos
-                    </span>{" "}
-                    en nuestra plataforma.
-                    <span className="block mt-1 sm:mt-1.5">
-                      ¡Más de{" "}
-                      <span className="font-bold text-gray-800">
-                        1,000 trabajadores
-                      </span>{" "}
-                      confían en nosotros!
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    Hoy se ofrecen{" "}
-                    <span className="text-emerald-600 font-black">
-                      {services.length} servicios
-                    </span>{" "}
-                    en nuestra plataforma.
-                    <span className="block mt-1 sm:mt-1.5">
-                      ¡Más de{" "}
-                      <span className="font-bold text-gray-800">
-                        600 profesionales
-                      </span>{" "}
-                      confían en nosotros!
-                    </span>
-                  </>
-                )}
-              </p>
-            </div>
+    {/* Contenido Dinámico con Deslizamiento Vertical (Evita saltos bruscos de UI) */}
+    <div className="absolute inset-y-0 left-0 w-[55%] sm:w-1/2 md:w-[45%] flex flex-col justify-center pl-6 sm:pl-6 md:pl-8 lg:pl-10 z-20 font-poppins">
+      
+      {/* 1. Badge Superior Deslizable */}
+      <div className="relative h-6 overflow-hidden mb-2">
+        <div 
+          className="flex flex-col transition-transform duration-500 ease-in-out"
+          style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
+        >
+          <div className="h-6 flex items-center">
+            <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
+              Búsqueda de Empleo
+            </span>
+          </div>
+          <div className="h-6 flex items-center">
+            <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
+              Directorio de Servicios
+            </span>
           </div>
         </div>
       </div>
 
+      {/* 2. Título de Bienvenida (Estático, no cambia bruscamente) */}
+      <h2 className="text-base sm:text-2xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 leading-tight">
+        ¡Bienvenido,{" "}
+        <span className="text-blue-600">{name.split(" ")[0]}</span>!
+      </h2>
+
+      {/* 3. Textos Secundarios Deslizables (Asegura que quepan en h-40 y h-48 sin romperse) */}
+      <div className="relative overflow-hidden mt-1.5 sm:mt-2.5 md:mt-3 h-12 sm:h-14 md:h-16">
+        <div
+          className="transition-transform duration-500 ease-in-out"
+          style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
+        >
+          {/* Bloque Texto: Trabajos */}
+          <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
+            <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
+              Se publicaron <span className="text-blue-600 font-black">{jobs.length} trabajos</span> en nuestra plataforma.
+            </p>
+            <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
+              ¡Más de <span className="font-bold text-gray-800">1,000 trabajadores</span> confían en nosotros!
+            </p>
+          </div>
+
+          {/* Bloque Texto: Servicios */}
+          <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
+            <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
+              Hoy se ofrecen <span className="text-emerald-600 font-black">{services.length} servicios</span> en nuestra plataforma.
+            </p>
+            <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
+              ¡Más de <span className="font-bold text-gray-800">600 profesionales</span> confían en nosotros!
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
       {/* 2. CONTENEDOR PRINCIPAL */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-2 flex gap-6 lg:gap-8 pb-6">
         {/* ========================================== */}

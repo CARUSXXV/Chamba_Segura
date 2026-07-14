@@ -22,6 +22,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "ChambaSegura",
   description: "Servicios Técnicos para el Hogar",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

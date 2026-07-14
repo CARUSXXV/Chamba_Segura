@@ -38,8 +38,13 @@ export class ServiciosService {
 
     const { data, error } = await query;
     if (error) throw new InternalServerErrorException(error.message);
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    return (data ?? []) as unknown as ServicioDetails[];
+
+    const servicios = (data ?? []) as unknown as ServicioDetails[];
+    return servicios.sort((a, b) => {
+      const fechaA = (a as any).creado_el || (a as any).actualizado_el || '';
+      const fechaB = (b as any).creado_el || (b as any).actualizado_el || '';
+      return fechaB.toString().localeCompare(fechaA.toString());
+    });
   }
 
   async findNearby(
