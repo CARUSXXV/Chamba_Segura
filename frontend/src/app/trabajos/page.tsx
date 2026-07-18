@@ -258,6 +258,14 @@ function TrabajosContent() {
                   </div>
                 </Link>
 
+                <Link href="/publicaciones" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-blue-50 transition-colors group">
+                  <div className="w-10 h-10 bg-blue-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📢</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Mis Publicaciones</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Gestiona tus trabajos y servicios creados</span>
+                  </div>
+                </Link>
+
                 <Link href="/perfil" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-emerald-50 transition-colors group">
                   <div className="w-10 h-10 bg-emerald-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">👤</div>
                   <div className="flex flex-col">
@@ -443,9 +451,8 @@ function TrabajosContent() {
                   <div className="absolute top-3 right-3 z-20">
                     <button
                       type="button"
-                      className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                        favoriteJobs.includes(job.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                      }`}
+                      className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${favoriteJobs.includes(job.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                        }`}
                       onClick={(e) => {
                         e.preventDefault();
                         setFavoriteJobs(toggleFavoriteJob(job.id));

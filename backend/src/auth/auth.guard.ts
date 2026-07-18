@@ -14,7 +14,7 @@ interface RequestWithUser extends Request {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
@@ -39,8 +39,6 @@ export class AuthGuard implements CanActivate {
       console.log('AuthGuard Error:', error, 'User:', user);
       throw new UnauthorizedException('Invalid or expired token');
     }
-
-    console.log('AuthGuard User ID:', user.id);
     request.user = user;
     return true;
   }

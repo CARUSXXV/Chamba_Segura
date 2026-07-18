@@ -21,13 +21,13 @@ export { ServicioDetails };
 
 @Injectable()
 export class ServiciosService {
-  constructor(private readonly supabaseService: SupabaseService) {}
+  constructor(private readonly supabaseService: SupabaseService) { }
 
   private get client() {
     return this.supabaseService.getClient();
   }
 
-  async findAll(oficio?: string, page = 1, limit = 20) {
+  async findAll(trabajador_id?: string, oficio?: string, page = 1, limit = 20) {
     const offset = (page - 1) * limit;
 
     let queryCount = this.client
@@ -36,6 +36,10 @@ export class ServiciosService {
 
     if (oficio) {
       queryCount = queryCount.eq('oficio', oficio);
+    }
+
+    if (trabajador_id) {
+      queryCount = queryCount.eq('trabajador_id', trabajador_id);
     }
 
     const { count, error: countError } = await queryCount;

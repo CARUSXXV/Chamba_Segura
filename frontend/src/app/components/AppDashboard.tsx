@@ -15,13 +15,6 @@ import {
 } from "@/utils/favorites";
 import DashboardFooter from "./DashboardFooter";
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 18) return "Buenas tardes";
-  return "Buenas noches";
-}
-
 function Pagination({
   currentPage,
   totalPages,
@@ -85,11 +78,10 @@ function Pagination({
             <button
               key={page}
               onClick={() => onPageChange(page as number)}
-              className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                currentPage === page
-                  ? "bg-gray-900 text-white shadow-md"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`min-w-[40px] h-10 rounded-xl text-sm font-bold transition-all cursor-pointer ${currentPage === page
+                ? "bg-gray-900 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {page}
             </button>
@@ -332,21 +324,19 @@ export default function AppDashboard() {
 
             {/* Capa invisible para detectar el clic fuera del menú y cerrarlo */}
             <div
-              className={`fixed inset-0 z-40 transition-opacity duration-300 ease-out ${
-                isProfileMenuOpen
-                  ? "opacity-100 visible"
-                  : "opacity-0 invisible pointer-events-none"
-              }`}
+              className={`fixed inset-0 z-40 transition-opacity duration-300 ease-out ${isProfileMenuOpen
+                ? "opacity-100 visible"
+                : "opacity-0 invisible pointer-events-none"
+                }`}
               onClick={() => setIsProfileMenuOpen(false)}
             />
 
             {/* Contenedor del Menú con animación fluida de entrada y salida */}
             <div
-              className={`absolute top-full right-0 mt-3 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 overflow-hidden z-50 flex flex-col origin-top-right transition-all duration-300 ease-out ${
-                isProfileMenuOpen
-                  ? "opacity-100 scale-100 translate-y-0 visible"
-                  : "opacity-0 scale-95 -translate-y-4 invisible pointer-events-none"
-              }`}
+              className={`absolute top-full right-0 mt-3 w-80 bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] border border-gray-100 overflow-hidden z-50 flex flex-col origin-top-right transition-all duration-300 ease-out ${isProfileMenuOpen
+                ? "opacity-100 scale-100 translate-y-0 visible"
+                : "opacity-0 scale-95 -translate-y-4 invisible pointer-events-none"
+                }`}
             >
               {/* Encabezado del Perfil */}
               <div className="p-4 border-b border-gray-100 bg-gray-50/50">
@@ -425,6 +415,14 @@ export default function AppDashboard() {
                     <span className="text-[10px] text-gray-500 font-medium">
                       Gestiona solicitudes y contratos
                     </span>
+                  </div>
+                </Link>
+
+                <Link href="/publicaciones" onClick={() => setIsProfileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-2xl hover:bg-blue-50 transition-colors group">
+                  <div className="w-10 h-10 bg-blue-100/50 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform">📢</div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-gray-900">Mis Publicaciones</span>
+                    <span className="text-[10px] text-gray-500 font-medium">Gestiona tus trabajos y servicios creados</span>
                   </div>
                 </Link>
 
@@ -516,83 +514,81 @@ export default function AppDashboard() {
 
       {/* Dynamic Banner Section */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 mt-6">
-  <div className="relative w-full h-40 sm:h-48 md:h-56 lg:h-64 rounded-3xl overflow-hidden shadow-xs border border-gray-200 bg-white">
-    
-    {/* Banners de Fondo Originales (Intactos, tal cual los tenías) */}
-    <img
-      src="/images/16.png"
-      alt="Trabajos"
-      className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
-        viewMode === "trabajos" ? "opacity-100" : "opacity-0"
-      }`}
-    />
-    <img
-      src="/images/17.png"
-      alt="Servicios"
-      className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${
-        viewMode === "servicios" ? "opacity-100" : "opacity-0"
-      }`}
-    />
+        <div className="relative w-full h-40 sm:h-48 md:h-56 lg:h-64 rounded-3xl overflow-hidden shadow-xs border border-gray-200 bg-white">
 
-    {/* Contenido Dinámico con Deslizamiento Vertical (Evita saltos bruscos de UI) */}
-    <div className="absolute inset-y-0 left-0 w-[55%] sm:w-1/2 md:w-[45%] flex flex-col justify-center pl-6 sm:pl-6 md:pl-8 lg:pl-10 z-20 font-poppins">
-      
-      {/* 1. Badge Superior Deslizable */}
-      <div className="relative h-6 overflow-hidden mb-2">
-        <div 
-          className="flex flex-col transition-transform duration-500 ease-in-out"
-          style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
-        >
-          <div className="h-6 flex items-center">
-            <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
-              Búsqueda de Empleo
-            </span>
-          </div>
-          <div className="h-6 flex items-center">
-            <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
-              Directorio de Servicios
-            </span>
+          {/* Banners de Fondo Originales (Intactos, tal cual los tenías) */}
+          <img
+            src="/images/16.png"
+            alt="Trabajos"
+            className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${viewMode === "trabajos" ? "opacity-100" : "opacity-0"
+              }`}
+          />
+          <img
+            src="/images/17.png"
+            alt="Servicios"
+            className={`absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-opacity duration-500 ease-in-out ${viewMode === "servicios" ? "opacity-100" : "opacity-0"
+              }`}
+          />
+
+          {/* Contenido Dinámico con Deslizamiento Vertical (Evita saltos bruscos de UI) */}
+          <div className="absolute inset-y-0 left-0 w-[55%] sm:w-1/2 md:w-[45%] flex flex-col justify-center pl-6 sm:pl-6 md:pl-8 lg:pl-10 z-20 font-poppins">
+
+            {/* 1. Badge Superior Deslizable */}
+            <div className="relative h-6 overflow-hidden mb-2">
+              <div
+                className="flex flex-col transition-transform duration-500 ease-in-out"
+                style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
+              >
+                <div className="h-6 flex items-center">
+                  <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
+                    Búsqueda de Empleo
+                  </span>
+                </div>
+                <div className="h-6 flex items-center">
+                  <span className="inline-block text-[9px] sm:text-xs font-black tracking-widest text-blue-600 uppercase bg-blue-50 px-2.5 py-1 rounded-full">
+                    Directorio de Servicios
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Título de Bienvenida (Estático, no cambia bruscamente) */}
+            <h2 className="text-base sm:text-2xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 leading-tight">
+              ¡Bienvenido,{" "}
+              <span className="text-blue-600">{name.split(" ")[0]}</span>!
+            </h2>
+
+            {/* 3. Textos Secundarios Deslizables (Asegura que quepan en h-40 y h-48 sin romperse) */}
+            <div className="relative overflow-hidden mt-1.5 sm:mt-2.5 md:mt-3 h-12 sm:h-14 md:h-16">
+              <div
+                className="transition-transform duration-500 ease-in-out"
+                style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
+              >
+                {/* Bloque Texto: Trabajos */}
+                <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
+                  <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
+                    Se publicaron <span className="text-blue-600 font-black">{jobs.length} trabajos</span> en nuestra plataforma.
+                  </p>
+                  <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
+                    ¡Más de <span className="font-bold text-gray-800">1,000 trabajadores</span> confían en nosotros!
+                  </p>
+                </div>
+
+                {/* Bloque Texto: Servicios */}
+                <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
+                  <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
+                    Hoy se ofrecen <span className="text-emerald-600 font-black">{services.length} servicios</span> en nuestra plataforma.
+                  </p>
+                  <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
+                    ¡Más de <span className="font-bold text-gray-800">600 profesionales</span> confían en nosotros!
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
-
-      {/* 2. Título de Bienvenida (Estático, no cambia bruscamente) */}
-      <h2 className="text-base sm:text-2xl md:text-2xl lg:text-3xl font-extrabold text-slate-900 leading-tight">
-        ¡Bienvenido,{" "}
-        <span className="text-blue-600">{name.split(" ")[0]}</span>!
-      </h2>
-
-      {/* 3. Textos Secundarios Deslizables (Asegura que quepan en h-40 y h-48 sin romperse) */}
-      <div className="relative overflow-hidden mt-1.5 sm:mt-2.5 md:mt-3 h-12 sm:h-14 md:h-16">
-        <div
-          className="transition-transform duration-500 ease-in-out"
-          style={{ transform: viewMode === "trabajos" ? "translateY(0)" : "translateY(-50%)" }}
-        >
-          {/* Bloque Texto: Trabajos */}
-          <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
-            <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
-              Se publicaron <span className="text-blue-600 font-black">{jobs.length} trabajos</span> en nuestra plataforma.
-            </p>
-            <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
-              ¡Más de <span className="font-bold text-gray-800">1,000 trabajadores</span> confían en nosotros!
-            </p>
-          </div>
-
-          {/* Bloque Texto: Servicios */}
-          <div className="h-12 sm:h-14 md:h-16 flex flex-col justify-start">
-            <p className="text-[10px] sm:text-xs md:text-sm lg:text-base text-gray-600 font-semibold leading-snug truncate">
-              Hoy se ofrecen <span className="text-emerald-600 font-black">{services.length} servicios</span> en nuestra plataforma.
-            </p>
-            <p className="text-[9px] sm:text-[11px] md:text-xs text-gray-500 mt-0.5 truncate">
-              ¡Más de <span className="font-bold text-gray-800">600 profesionales</span> confían en nosotros!
-            </p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
       {/* 2. CONTENEDOR PRINCIPAL */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-2 flex gap-6 lg:gap-8 pb-6">
         {/* ========================================== */}
@@ -623,9 +619,8 @@ export default function AppDashboard() {
                 </svg>
               </button>
               <span
-                className={`ml-3 font-black text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
-                  isSidebarOpen ? "opacity-100" : "opacity-0 w-0 hidden"
-                }`}
+                className={`ml-3 font-black text-xs text-gray-400 uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? "opacity-100" : "opacity-0 w-0 hidden"
+                  }`}
               >
                 Filtros
               </span>
@@ -639,21 +634,19 @@ export default function AppDashboard() {
                     <button
                       onClick={() => setActiveCategory(cat.name)}
                       title={!isSidebarOpen ? cat.name : ""}
-                      className={`w-full flex items-center p-2 rounded-xl transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-gray-900 text-white shadow-md"
-                          : "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
+                      className={`w-full flex items-center p-2 rounded-xl transition-all cursor-pointer ${isSelected
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
                     >
                       <span className="text-xl shrink-0 w-8 flex justify-center">
                         {cat.icon}
                       </span>
                       <span
-                        className={`ml-3 font-semibold text-sm whitespace-nowrap overflow-hidden transition-all duration-300 text-left ${
-                          isSidebarOpen
-                            ? "max-w-[150px] opacity-100"
-                            : "max-w-0 opacity-0 ml-0"
-                        }`}
+                        className={`ml-3 font-semibold text-sm whitespace-nowrap overflow-hidden transition-all duration-300 text-left ${isSidebarOpen
+                          ? "max-w-[150px] opacity-100"
+                          : "max-w-0 opacity-0 ml-0"
+                          }`}
                       >
                         {cat.name}
                       </span>
@@ -676,9 +669,8 @@ export default function AppDashboard() {
         )}
 
         <div
-          className={`md:hidden fixed top-0 left-0 h-full w-[280px] bg-white z-50 shadow-2xl transition-transform duration-300 flex flex-col ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`md:hidden fixed top-0 left-0 h-full w-[280px] bg-white z-50 shadow-2xl transition-transform duration-300 flex flex-col ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <span className="font-black text-gray-900 text-lg">Categorías</span>
@@ -708,11 +700,10 @@ export default function AppDashboard() {
                     setActiveCategory(cat.name);
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center p-4 rounded-2xl gap-4 transition-all cursor-pointer ${
-                    activeCategory === cat.name
-                      ? "bg-gray-900 text-white shadow-md"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`w-full flex items-center p-4 rounded-2xl gap-4 transition-all cursor-pointer ${activeCategory === cat.name
+                    ? "bg-gray-900 text-white shadow-md"
+                    : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   <span className="text-2xl">{cat.icon}</span>
                   <span className="font-bold">{cat.name}</span>
@@ -732,22 +723,20 @@ export default function AppDashboard() {
               {/* 1. La "Pastilla" Blanca Animada (Fondo) */}
               <div className="absolute inset-0 p-1.5 pointer-events-none flex">
                 <div
-                  className={`w-1/2 h-full bg-white rounded-xl shadow-sm transition-transform duration-300 ease-out ${
-                    viewMode === "trabajos"
-                      ? "translate-x-0"
-                      : "translate-x-full"
-                  }`}
+                  className={`w-1/2 h-full bg-white rounded-xl shadow-sm transition-transform duration-300 ease-out ${viewMode === "trabajos"
+                    ? "translate-x-0"
+                    : "translate-x-full"
+                    }`}
                 />
               </div>
 
               {/* 2. Botón Trabajos (Textos por encima de la pastilla) */}
               <button
                 onClick={() => setViewMode("trabajos")}
-                className={`relative z-10 py-2.5 font-bold text-sm transition-colors duration-300 cursor-pointer ${
-                  viewMode === "trabajos"
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
+                className={`relative z-10 py-2.5 font-bold text-sm transition-colors duration-300 cursor-pointer ${viewMode === "trabajos"
+                  ? "text-gray-900"
+                  : "text-gray-500 hover:text-gray-800"
+                  }`}
               >
                 💼 Trabajos
               </button>
@@ -755,11 +744,10 @@ export default function AppDashboard() {
               {/* 3. Botón Servicios */}
               <button
                 onClick={() => setViewMode("servicios")}
-                className={`relative z-10 py-2.5 font-bold text-sm transition-colors duration-300 cursor-pointer ${
-                  viewMode === "servicios"
-                    ? "text-gray-900"
-                    : "text-gray-500 hover:text-gray-800"
-                }`}
+                className={`relative z-10 py-2.5 font-bold text-sm transition-colors duration-300 cursor-pointer ${viewMode === "servicios"
+                  ? "text-gray-900"
+                  : "text-gray-500 hover:text-gray-800"
+                  }`}
               >
                 🛠️ Servicios
               </button>
@@ -853,7 +841,7 @@ export default function AppDashboard() {
                         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors z-10" />
 
                         {(job as any).fotos_urls &&
-                        (job as any).fotos_urls.length > 0 ? (
+                          (job as any).fotos_urls.length > 0 ? (
                           <img
                             src={(job as any).fotos_urls[0]}
                             alt={`Foto de ${job.title}`}
@@ -871,9 +859,8 @@ export default function AppDashboard() {
 
                         <div className="absolute top-3 right-3 z-20">
                           <button
-                            className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                              favoriteJobs.includes(job.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                            }`}
+                            className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${favoriteJobs.includes(job.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                              }`}
                             onClick={(e) => {
                               e.preventDefault();
                               setFavoriteJobs(toggleFavoriteJob(job.id));
@@ -905,8 +892,8 @@ export default function AppDashboard() {
                             <span>
                               {job.perfiles?.rating_promedio
                                 ? Number(job.perfiles.rating_promedio).toFixed(
-                                    1,
-                                  )
+                                  1,
+                                )
                                 : "N/A"}
                             </span>
                           </div>
@@ -917,7 +904,7 @@ export default function AppDashboard() {
                         </p>
 
                         {job.distancia_metros !== undefined &&
-                        job.distancia_metros !== null ? (
+                          job.distancia_metros !== null ? (
                           <p className="text-sm text-blue-600 font-semibold">
                             📍 A {formatDistance(job.distancia_metros)}
                           </p>
@@ -995,7 +982,7 @@ export default function AppDashboard() {
                         <div className="absolute inset-0 bg-black/5 group-hover:bg-black/0 transition-colors z-10" />
 
                         {(servicio as any).fotos_urls &&
-                        (servicio as any).fotos_urls.length > 0 ? (
+                          (servicio as any).fotos_urls.length > 0 ? (
                           <img
                             src={(servicio as any).fotos_urls[0]}
                             alt={`Foto de ${servicio.oficio}`}
@@ -1013,9 +1000,8 @@ export default function AppDashboard() {
 
                         <div className="absolute top-3 right-3 z-20">
                           <button
-                            className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${
-                              favoriteServices.includes(servicio.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
-                            }`}
+                            className={`w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95 ${favoriteServices.includes(servicio.id) ? "text-red-500" : "text-gray-400 hover:text-red-500"
+                              }`}
                             onClick={(e) => {
                               e.preventDefault();
                               setFavoriteServices(toggleFavoriteService(servicio.id));
@@ -1047,8 +1033,8 @@ export default function AppDashboard() {
                             <span>
                               {servicio.perfiles?.rating_promedio
                                 ? Number(
-                                    servicio.perfiles.rating_promedio,
-                                  ).toFixed(1)
+                                  servicio.perfiles.rating_promedio,
+                                ).toFixed(1)
                                 : "N/A"}
                             </span>
                           </div>
@@ -1059,7 +1045,7 @@ export default function AppDashboard() {
                         </p>
 
                         {servicio.distancia_metros !== undefined &&
-                        servicio.distancia_metros !== null ? (
+                          servicio.distancia_metros !== null ? (
                           <p className="text-sm text-blue-600 font-semibold">
                             📍 A {formatDistance(servicio.distancia_metros)}
                           </p>
@@ -1071,7 +1057,7 @@ export default function AppDashboard() {
 
                         {/* Ojo aquí: Si tus servicios manejan "precio" en vez de "budget", cámbialo en esta línea */}
                         <p className="text-base font-black text-gray-900 pt-1">
-                          ${servicio.budget || 0} USD
+                          ${servicio.tarifa_promedio || 0} USD
                         </p>
                       </div>
                     </Link>

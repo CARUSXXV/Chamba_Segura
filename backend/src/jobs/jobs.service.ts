@@ -12,6 +12,7 @@ export class JobsService {
   constructor(private readonly supabase: SupabaseClient<Database>) { }
 
   async searchJobs(filters: JobFilter): Promise<PaginatedResponse<any>> {
+    const contractor_id = filters.contractor_id;
     const lat = filters.latitude ? Number(filters.latitude) : undefined;
     const long = filters.longitude ? Number(filters.longitude) : undefined;
     const radius = filters.radius ? Number(filters.radius) : undefined;
@@ -61,6 +62,10 @@ export class JobsService {
     let queryCount = this.supabase
       .from('jobs')
       .select('*', { count: 'exact', head: true });
+
+    if (filters.contractor_id) {
+      queryCount = queryCount.eq('contractor_id', filters.contractor_id);
+    }
 
     if (filters.category) {
       queryCount = queryCount.eq('category', filters.category);

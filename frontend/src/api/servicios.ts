@@ -8,7 +8,7 @@ export interface Servicio {
   firma_contrato: boolean;
   actualizado_el: string;
   distancia_metros?: number | null;
-  fotos_url?: string[];
+  fotos_urls?: string[];
   budget: number;
   ubicacion?: {
     type: string;
@@ -31,7 +31,7 @@ export interface ServicioPayload {
   firma_contrato?: boolean;
   latitude?: number;
   longitude?: number;
-  fotos_url?: string[];
+  fotos_urls?: string[];
 }
 
 export interface ServicioFilter {
@@ -103,5 +103,25 @@ export async function createServicio(token: string, payload: ServicioPayload): P
     const text = await response.text();
     throw new Error(text || 'Error al crear servicio');
   }
+  return response.json();
+}
+
+export async function updateServicio(token: string, id: string, payload: ServicioPayload): Promise<Servicio> {
+  const response = await fetch(`${SERVICIOS_URL}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    // Leemos el error real del backend
+    const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+    console.error("🔥 ERROR REAL AL ACTUALIZAR:", errorData);
+    throw new Error(errorData.message || 'Error al actualizar el servicio');
+  }
+
   return response.json();
 }

@@ -14,6 +14,7 @@ import { ContratacionesModule } from './contrataciones/contrataciones.module';
 import { PostulacionesModule } from './postulaciones/postulaciones.module';
 import { ResenasModule } from './resenas/resenas.module';
 import { PaymentsModule } from './payments/payments.module';
+import { PublicacionesModule } from './publicaciones/publicaciones.module';
 
 @Module({
   imports: [
@@ -30,8 +31,9 @@ import { PaymentsModule } from './payments/payments.module';
     PostulacionesModule,
     ResenasModule,
     PaymentsModule,
+    PublicacionesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

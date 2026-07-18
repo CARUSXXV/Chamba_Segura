@@ -58,10 +58,35 @@ export interface PaginatedResponse<T> {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-const JOBS_URL = `${API_BASE_URL}/jobs`;
+const JOBS_URL = `${API_BASE_URL}/publicaciones/trabajos`;
 
+// ==========================================
+// HELPER: Extraer ID del Token
+// ==========================================
+function getUserIdFromToken(token: string): string {
+  try {
+    const payloadBase64 = token.split('.')[1];
+    const payloadJson = atob(payloadBase64);
+    const payload = JSON.parse(payloadJson);
+    // Usa 'sub' o 'id' dependiendo de cómo lo devuelva tu backend de NestJS
+    return payload.sub || payload.id;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return '';
+  }
+}
+
+// ==========================================
+// FUNCIÓN PRINCIPAL (Dashboard)
+// ==========================================
 export async function fetchJobs(token: string, filters?: JobFilter): Promise<PaginatedResponse<Job>> {
   const url = new URL(JOBS_URL);
+
+  // ¡NUEVO! Ahora sí enviamos el contractor_id al backend si existe en los filtros
+  if (filters?.contractor_id) {
+    url.searchParams.append('contractor_id', filters.contractor_id);
+  }
+
   if (filters?.category) {
     url.searchParams.append('category', filters.category);
   }
@@ -97,6 +122,27 @@ export async function fetchJobs(token: string, filters?: JobFilter): Promise<Pag
   return response.json();
 }
 
+// ==========================================
+// NUEVA FUNCIÓN: Solo MIS trabajos
+// ==========================================
+export async function fetchMyJobs(token: string, additionalFilters?: Omit<JobFilter, 'contractor_id'>): Promise<PaginatedResponse<Job>> {
+
+  const userId = getUserIdFromToken(token);
+
+  if (!userId) {
+    throw new Error('No se pudo extraer el ID del usuario desde el token.');
+  }
+
+  // Reutilizamos fetchJobs, pero le forzamos nuestro ID de usuario en el filtro
+  return fetchJobs(token, {
+    ...additionalFilters,
+    contractor_id: userId
+  });
+}
+
+// ==========================================
+// RESTO DEL CRUD
+// ==========================================
 export async function fetchJobById(token: string, id: string): Promise<Job> {
   const response = await fetch(`${JOBS_URL}/${id}`, {
     headers: {

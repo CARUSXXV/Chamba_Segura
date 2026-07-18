@@ -24,6 +24,7 @@ export interface JobPayload {
 }
 
 export interface JobFilter {
+  contractor_id?: string;
   category?: string;
   skills?: string[]; // Pasado por query params, ej: ?skills=React&skills=Node
   latitude?: number;
@@ -47,6 +48,7 @@ export class JobsController {
 
   @Get()
   async findAll(
+    @Query('contractor_id') contractor_id?: string,
     @Query('category') category?: string,
     @Query('skills') skills?: string[],
     @Query('latitude') latitudeStr?: string,
@@ -56,6 +58,7 @@ export class JobsController {
     @Query('limit') limitStr?: string,
   ) {
     const filters: JobFilter = {
+      contractor_id,
       category,
       skills: typeof skills === 'string' ? [skills] : skills,
       latitude: latitudeStr ? Number(latitudeStr) : undefined,

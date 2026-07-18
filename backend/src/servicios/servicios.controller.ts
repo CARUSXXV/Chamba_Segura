@@ -14,7 +14,7 @@ import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('servicios')
 export class ServiciosController {
-  constructor(private readonly serviciosService: ServiciosService) {}
+  constructor(private readonly serviciosService: ServiciosService) { }
 
   @Get()
   async findAll(
@@ -22,8 +22,9 @@ export class ServiciosController {
     @Query('longitude') longitudeStr?: string,
     @Query('radius') radiusStr?: string,
     @Query('oficio') oficio?: string,
-    @Query('page') pageStr?: string,
+    @Query('page') pageStr?: number,
     @Query('limit') limitStr?: string,
+    @Query('trabajador_id') trabajador_id?: string,
   ) {
     const latitude = latitudeStr ? Number(latitudeStr) : undefined;
     const longitude = longitudeStr ? Number(longitudeStr) : undefined;
@@ -41,7 +42,7 @@ export class ServiciosController {
         limit,
       );
     }
-    return this.serviciosService.findAll(oficio, page, limit);
+    return this.serviciosService.findAll(trabajador_id, oficio, page, limit);
   }
 
   @Get(':id')

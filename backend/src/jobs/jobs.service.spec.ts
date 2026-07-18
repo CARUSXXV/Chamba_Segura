@@ -59,8 +59,8 @@ describe('JobsService Geolocation', () => {
       categoria: null,
       habilidades: null,
     });
-    expect(result[0].distancia_metros).toBe(500);
-    expect(result[0].perfiles.nombre_completo).toBe('Test User');
+    expect(result.data[0].distancia_metros).toBe(500);
+    expect(result.data[0].perfiles.nombre_completo).toBe('Test User');
   });
 
   it('should format location as WKT POINT during creation', async () => {
